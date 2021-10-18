@@ -10,6 +10,12 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface Mx_liteVisitor<T> extends ParseTreeVisitor<T> {
 	/**
+	 * Visit a parse tree produced by {@link Mx_liteParser#constant}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstant(Mx_liteParser.ConstantContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link Mx_liteParser#basType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
