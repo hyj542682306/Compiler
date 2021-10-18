@@ -73,7 +73,7 @@ BlockComment: '/*' .*? '*/' -> skip;
 
 Identifier: [a-zA-Z][a-zA-Z_0-9]*;
 
-Constant: BoolConst | IntConst | StringConst | Null;
+constant: BoolConst | IntConst | StringConst | Null;
 BoolConst
 	: True
 	| False
@@ -124,7 +124,7 @@ statement
 
 expression
 	: '(' expression ')' #subExpr
-	| Constant #constExpr
+	| constant #constExpr
 	| This #thisExpr
 	| Identifier #idExpr
 	| expression '(' expressionList? ')' #funcExpr
