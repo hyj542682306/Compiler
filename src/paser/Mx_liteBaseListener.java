@@ -15,6 +15,18 @@ public class Mx_liteBaseListener implements Mx_liteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterConstant(Mx_liteParser.ConstantContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitConstant(Mx_liteParser.ConstantContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterBasType(Mx_liteParser.BasTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
