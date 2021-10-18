@@ -7,6 +7,16 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface Mx_liteListener extends ParseTreeListener {
 	/**
+	 * Enter a parse tree produced by {@link Mx_liteParser#constant}.
+	 * @param ctx the parse tree
+	 */
+	void enterConstant(Mx_liteParser.ConstantContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Mx_liteParser#constant}.
+	 * @param ctx the parse tree
+	 */
+	void exitConstant(Mx_liteParser.ConstantContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link Mx_liteParser#basType}.
 	 * @param ctx the parse tree
 	 */
