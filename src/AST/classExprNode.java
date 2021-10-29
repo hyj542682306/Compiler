@@ -5,7 +5,7 @@ import util.position;
 public class classExprNode extends exprNode {
     public exprNode name;
     public String id;
-    public boolean isFunc=false;
+    public boolean isFunc = false;
 
     public classExprNode(position _pos, exprNode _name, String _id) {
         super(_pos);
