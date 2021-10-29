@@ -5,13 +5,13 @@ import util.position;
 import java.util.ArrayList;
 
 public class newExprNode extends exprNode {
-    public typeNode type;
+    public typeNode typeN;
     public ArrayList<exprNode> exprList = new ArrayList<>();
 
-    public newExprNode(position _pos, typeNode _type, int _dim, ArrayList<exprNode> _exprList) {
+    public newExprNode(position _pos, typeNode _typeN, int _dim, ArrayList<exprNode> _exprList) {
         super(_pos);
-        type = _type;
-        type.dim = _dim;
+        typeN = _typeN;
+        typeN.dim = _dim;
         exprList = _exprList;
     }
 
