@@ -1,4 +1,4 @@
-package Util;
+package util;
 
 import util.error.syntaxError;
 import util.position;
