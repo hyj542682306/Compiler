@@ -11,31 +11,31 @@ import parser.Mx_liteParser;
 import java.io.InputStream;
 
 public class Main {
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
 
-        String name="text.mx";
-        InputStream input=System.in;
+        String name = "text.mx";
+        InputStream input = System.in;
 
-        try{
+        try {
             progNode ASTRoot;
-            scope globalScope=new scope(null);
+            scope globalScope = new scope(null);
 
-            Mx_liteLexer lexer=new Mx_liteLexer(CharStreams.fromStream(input));
+            Mx_liteLexer lexer = new Mx_liteLexer(CharStreams.fromStream(input));
             lexer.removeErrorListeners();
             lexer.addErrorListener(new Mx_liteErrorListener());
 
-            Mx_liteParser parser=new Mx_liteParser(new CommonTokenStream(lexer));
+            Mx_liteParser parser = new Mx_liteParser(new CommonTokenStream(lexer));
             parser.removeErrorListeners();
             parser.addErrorListener(new Mx_liteErrorListener());
 
-            ParseTree parseTreeRoot=parser.program();
-            ASTBuilder astBuilder=new ASTBuilder();
-            ASTRoot=(progNode)astBuilder.visit(parseTreeRoot);
+            ParseTree parseTreeRoot = parser.program();
+            ASTBuilder astBuilder = new ASTBuilder();
+            ASTRoot = (progNode) astBuilder.visit(parseTreeRoot);
 
             new SymbolCollector(globalScope).visit(ASTRoot);
             globalScope.varMap.clear();
             new SemanticChecker(globalScope).visit(ASTRoot);
-        } catch (Error error){
+        } catch (Error error) {
             System.err.println(error.toString());
             throw new RuntimeException();
         }
