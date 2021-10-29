@@ -63,7 +63,8 @@ public class SemanticChecker implements ASTvisitor {
 
         //check RETURN sentence
         if (it.id.equals("main")) hasReturn = true;
-        if (!hasReturn && it.type != null && !it.type.type.equals("void")) throw new semanticError("Missing Return", it.pos);
+        if (!hasReturn && it.type != null && !it.type.type.equals("void"))
+            throw new semanticError("Missing Return", it.pos);
 
         //exit function
         nowScope = nowScope.pScope;
@@ -318,12 +319,13 @@ public class SemanticChecker implements ASTvisitor {
         else it.id.accept(this);
 
         //check if the first expression is a function name
-        if (!(it.id.type instanceof funcSymbol tmp)) throw new semanticError("Undefined Function", it.pos);
+        if (!(it.id.type instanceof funcSymbol)) throw new semanticError("Undefined Function", it.pos);
 
         //get the information of the expressions
         it.exprList.accept(this);
 
         //check the number of parameters and expressions
+        funcSymbol tmp = (funcSymbol) it.id.type;
         if (it.exprList.exprList.size() != tmp.paraList.size())
             throw new semanticError("Error number of parameters", it.pos);
 
@@ -343,12 +345,13 @@ public class SemanticChecker implements ASTvisitor {
         it.off.accept(this);
 
         //check if the bas is an array
-        if (!(it.bas.type instanceof arrayType tmp)) throw new semanticError("Undifined Array", it.pos);
+        if (!(it.bas.type instanceof arrayType)) throw new semanticError("Undifined Array", it.pos);
 
         //check if the off is a integer
         if (!(it.off.type.isInt())) throw new semanticError("Invalid Offset", it.pos);
 
         //update information of this expression
+        arrayType tmp = (arrayType) it.bas.type;
         //reduce to basicType
         if (tmp.dim == 1) it.type = tmp.type;
             //dimensionality reduction
@@ -403,9 +406,10 @@ public class SemanticChecker implements ASTvisitor {
         }
 
         //check if the expression is a class
-        if (!(it.name.type instanceof classType preClass)) throw new semanticError("Undefine Class", it.pos);
+        if (!(it.name.type instanceof classType)) throw new semanticError("Undefine Class", it.pos);
 
         //update the information of this expression from the class information
+        classType preClass = (classType) it.name.type;
         if (it.isFunc) {
             if (!preClass.funcMap.containsKey(it.id)) throw new semanticError("Undefine Function in Class", it.pos);
             it.type = preClass.funcMap.get(it.id);
@@ -424,8 +428,8 @@ public class SemanticChecker implements ASTvisitor {
             throw new semanticError("Error SuffixExpression", it.pos);
 
         //check if the expression can be left value
-        if(!it.expr.assign)
-            throw new semanticError("Error Assign",it.pos);
+        if (!it.expr.assign)
+            throw new semanticError("Error Assign", it.pos);
 
         it.type = it.expr.type;
     }
@@ -460,13 +464,13 @@ public class SemanticChecker implements ASTvisitor {
 
     @Override
     public void visit(newExprNode it) {
-        if(it.exprList!=null){
-            it.exprList.forEach(x->{
+        if (it.exprList != null) {
+            it.exprList.forEach(x -> {
                 x.accept(this);
-                if(!x.type.isInt())throw new semanticError("New Array's parameter Error",it.pos);
+                if (!x.type.isInt()) throw new semanticError("New Array's parameter Error", it.pos);
             });
         }
-        it.type=nowScope.typeGet(it.typeN.type,it.pos);
+        it.type = nowScope.typeGet(it.typeN.type, it.pos);
     }
 
     @Override
