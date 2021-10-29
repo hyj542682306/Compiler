@@ -4,7 +4,6 @@ import util.position;
 
 public class idExprNode extends exprNode {
     public String id;
-    public typeNode type;
 
     public idExprNode(position _pos, String _id) {
         super(_pos);
