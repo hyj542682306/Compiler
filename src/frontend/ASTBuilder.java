@@ -210,10 +210,10 @@ public class ASTBuilder extends Mx_liteBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitFuncExpr(Mx_liteParser.FuncExprContext ctx) {
-        exprNode res=(exprNode) visit(ctx.expression());
-        if(res instanceof classExprNode){
-            res.assign=false;
-            ((classExprNode) res).isFunc=true;
+        exprNode res = (exprNode) visit(ctx.expression());
+        if (res instanceof classExprNode) {
+            res.assign = false;
+            ((classExprNode) res).isFunc = true;
         }
         return new funcExprNode(new position(ctx), res,
                 ctx.expressionList() == null ? new exprListNode(new position(ctx)) : (exprListNode) visit(ctx.expressionList()));
