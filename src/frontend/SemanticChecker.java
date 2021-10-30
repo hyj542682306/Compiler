@@ -51,11 +51,11 @@ public class SemanticChecker implements ASTvisitor {
 
         //update variables with parameters
         if (it.paraList != null) it.paraList.forEach(x -> nowScope.newVar(x.id,
-                new varSymbol(nowScope.typeGet(x.type.type, x.pos), x.id), x.pos));
+                new varSymbol(nowScope.typeGet(x.type), x.id), x.pos));
 
         //record function's type
         hasReturn = false;
-        if (it.type != null) returnType = nowScope.typeGet(it.id, it.pos);
+        if (it.type != null) returnType = globalScope.typeGet(it.type);
         else returnType = new literalType("void");
 
         //visit suite
@@ -76,7 +76,7 @@ public class SemanticChecker implements ASTvisitor {
         nowScope = new scope(nowScope);
 
         //update variables and functions with classType
-        nowClass = (classType) nowScope.typeMap.get(it.id);
+        nowClass = (classType) globalScope.typeMap.get(it.id);
         nowClass.varMap.forEach((x, y) -> nowScope.newVar(x, y, it.pos));
         nowClass.funcMap.forEach((x, y) -> nowScope.newFunc(x, y, it.pos));
 
@@ -97,7 +97,7 @@ public class SemanticChecker implements ASTvisitor {
     @Override
     public void visit(varDecStmtNode it) {
         //get the type of this variable
-        Type tmp = nowScope.typeGet(it.id, it.pos);
+        Type tmp = globalScope.typeGet(it.type);
 
         //get the type of the expression and check
         if (it.expr != null) {
@@ -280,12 +280,12 @@ public class SemanticChecker implements ASTvisitor {
 
         //update the parameters
         if (it.paraList != null) it.paraList.forEach(x -> nowScope.newVar(x.id,
-                new varSymbol(nowScope.typeGet(x.type.type, x.pos), x.id), x.pos));
+                new varSymbol(nowScope.typeGet(x.type), x.id), x.pos));
 
         //check if the parameters match the expressions
         if (it.paraList != null) {
             for (int i = 0; i < it.paraList.size(); i++) {
-                if (nowScope.typeGet(it.paraList.get(i).type.type, it.paraList.get(i).pos).
+                if (nowScope.typeGet(it.paraList.get(i).type).
                         typeEqual(it.exprList.exprList.get(i).type))
                     throw new semanticError("LAMBDA parameters dismatch expressions", it.pos);
             }
@@ -331,7 +331,7 @@ public class SemanticChecker implements ASTvisitor {
 
         //check if the parameters match the expressions
         for (int i = 0; i < it.exprList.exprList.size(); i++) {
-            if (it.exprList.exprList.get(i).type.typeEqual(tmp.paraList.get(i).type))
+            if (!it.exprList.exprList.get(i).type.typeEqual(tmp.paraList.get(i).type))
                 throw new semanticError("Parameters dismatch expressions", it.pos);
         }
 
@@ -470,7 +470,7 @@ public class SemanticChecker implements ASTvisitor {
                 if (!x.type.isInt()) throw new semanticError("New Array's parameter Error", it.pos);
             });
         }
-        it.type = nowScope.typeGet(it.typeN.type, it.pos);
+        it.type = globalScope.typeGet(it.typeN);
     }
 
     @Override
