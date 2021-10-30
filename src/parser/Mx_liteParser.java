@@ -1,4 +1,3 @@
-// Generated from D:/2021-2022-1/计算机系统（1）/大作业/Compiler/src/parser\Mx_lite.g4 by ANTLR 4.9.1
 package parser;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
