@@ -391,8 +391,8 @@ public class SemanticChecker implements ASTvisitor {
         }
 
         //string built-in function [<>.paserInt()]
-        if ((it.name.type.isString()) && it.isFunc && it.id.equals("paserInt")) {
-            funcSymbol res = new funcSymbol("paserInt");
+        if ((it.name.type.isString()) && it.isFunc && it.id.equals("parseInt")) {
+            funcSymbol res = new funcSymbol("parseInt");
             res.type = new literalType("int");
             it.type = res;
             return;
