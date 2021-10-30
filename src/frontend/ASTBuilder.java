@@ -296,7 +296,7 @@ public class ASTBuilder extends Mx_liteBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitLambda(Mx_liteParser.LambdaContext ctx) {
         lambdaExprNode res = new lambdaExprNode(new position(ctx), (suiteStmtNode) visit(ctx.suite()),
-                ctx.expressionList() == null ? null : (exprListNode) visit(ctx.expressionList()));
+                ctx.expressionList() == null ? new exprListNode(new position(ctx)) : (exprListNode) visit(ctx.expressionList()));
         if (ctx.parameterList() != null) {
             res.paraList.addAll(((varDefStmtNode) visit(ctx.parameterList())).varList);
         }
