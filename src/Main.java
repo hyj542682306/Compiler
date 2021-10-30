@@ -8,14 +8,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import parser.Mx_liteLexer;
 import parser.Mx_liteParser;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 public class Main {
     public static void main(String[] args) throws Exception {
 
-        String name = "text.mx";
-        InputStream input = System.in;
-
+        String name = "test.mx";
+//        InputStream input = System.in;
+        FileInputStream input = new FileInputStream(name);
         try {
             progNode ASTRoot;
             scope globalScope = new scope(null);
@@ -33,6 +34,7 @@ public class Main {
             ASTRoot = (progNode) astBuilder.visit(parseTreeRoot);
 
             new SymbolCollector(globalScope).visit(ASTRoot);
+            new TypeCollector(globalScope).visit(ASTRoot);
             globalScope.varMap.clear();
             new SemanticChecker(globalScope).visit(ASTRoot);
         } catch (Error error) {
