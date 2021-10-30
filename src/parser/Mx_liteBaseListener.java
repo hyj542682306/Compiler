@@ -75,6 +75,18 @@ public class Mx_liteBaseListener implements Mx_liteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterProgramBlock(Mx_liteParser.ProgramBlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitProgramBlock(Mx_liteParser.ProgramBlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterVarDef(Mx_liteParser.VarDefContext ctx) { }
 	/**
 	 * {@inheritDoc}
