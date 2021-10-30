@@ -8,7 +8,7 @@ public class classExprNode extends exprNode {
     public boolean isFunc = false;
 
     public classExprNode(position _pos, exprNode _name, String _id) {
-        super(_pos);
+        super(_pos,true);
         name = _name;
         id = _id;
     }
