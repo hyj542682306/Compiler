@@ -63,9 +63,7 @@ public class SymbolCollector implements ASTvisitor {
 
     @Override
     public void visit(funcDefNode it) {
-        funcSymbol tmp = new funcSymbol(it.id);
-        it.paraList.forEach(x -> tmp.paraList.add(new varSymbol(nowScope.typeGet(x.type.type, x.pos), x.id)));
-        nowScope.newFunc(it.id, tmp, it.pos);
+        nowScope.newFunc(it.id, new funcSymbol(it.id), it.pos);
     }
 
     @Override
@@ -83,8 +81,7 @@ public class SymbolCollector implements ASTvisitor {
 
     @Override
     public void visit(varDecStmtNode it) {
-        varSymbol tmp = new varSymbol(nowScope.typeGet(it.type.type, it.pos), it.id);
-        nowScope.newVar(it.id, tmp, it.pos);
+        nowScope.newVar(it.id, new varSymbol(it.id), it.pos);
     }
 
     @Override
