@@ -40,6 +40,12 @@ public interface Mx_liteVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProgram(Mx_liteParser.ProgramContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link Mx_liteParser#programBlock}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProgramBlock(Mx_liteParser.ProgramBlockContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link Mx_liteParser#varDef}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
