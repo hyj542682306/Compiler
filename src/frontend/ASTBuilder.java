@@ -1,6 +1,9 @@
 package frontend;
 
 import AST.*;
+import AST.defNode.*;
+import AST.stmtNode.*;
+import AST.exprNode.*;
 import org.antlr.v4.runtime.Parser;
 import util.position;
 import util.error.syntaxError;

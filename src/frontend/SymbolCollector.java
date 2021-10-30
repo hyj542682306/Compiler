@@ -1,7 +1,11 @@
 package frontend;
 
 import AST.*;
+import AST.defNode.*;
+import AST.stmtNode.*;
+import AST.exprNode.*;
 import util.*;
+import util.type.*;
 import util.error.semanticError;
 
 public class SymbolCollector implements ASTvisitor {

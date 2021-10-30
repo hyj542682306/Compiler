@@ -1,7 +1,11 @@
 package frontend;
 
 import AST.*;
+import AST.defNode.*;
+import AST.exprNode.*;
+import AST.stmtNode.*;
 import util.*;
+import util.type.*;
 import util.error.error;
 import util.error.semanticError;
 

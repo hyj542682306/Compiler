@@ -2,6 +2,7 @@ package util;
 
 import AST.typeNode;
 import util.error.semanticError;
+import util.type.*;
 
 import java.util.HashMap;
 

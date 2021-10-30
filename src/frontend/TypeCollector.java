@@ -1,7 +1,11 @@
 package frontend;
 
 import AST.*;
+import AST.defNode.*;
+import AST.exprNode.*;
+import AST.stmtNode.*;
 import util.*;
+import util.type.*;
 
 public class TypeCollector implements ASTvisitor {
     public scope globalScope;
