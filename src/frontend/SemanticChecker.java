@@ -2,6 +2,7 @@ package frontend;
 
 import AST.*;
 import util.*;
+import util.error.error;
 import util.error.semanticError;
 
 import java.util.Objects;
@@ -282,12 +283,12 @@ public class SemanticChecker implements ASTvisitor {
 
         //update the parameters
         if (it.paraList != null) it.paraList.forEach(x -> nowScope.newVar(x.id,
-                new varSymbol(nowScope.typeGet(x.type), x.id), x.pos));
+                new varSymbol(globalScope.typeGet(x.type), x.id), x.pos));
 
         //check if the parameters match the expressions
         if (it.paraList != null) {
             for (int i = 0; i < it.paraList.size(); i++) {
-                if (nowScope.typeGet(it.paraList.get(i).type).
+                if (!globalScope.typeGet(it.paraList.get(i).type).
                         typeEqual(it.exprList.exprList.get(i).type))
                     throw new semanticError("LAMBDA parameters dismatch expressions", it.pos);
             }
@@ -479,6 +480,10 @@ public class SemanticChecker implements ASTvisitor {
     public void visit(binaryExprNode it) {
         it.expr1.accept(this);
         it.expr2.accept(this);
+
+        if(it.expr1.type==null){
+            throw new semanticError("imps",it.pos);
+        }
 
         switch (it.op) {
             case "-":
