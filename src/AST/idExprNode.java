@@ -6,7 +6,7 @@ public class idExprNode extends exprNode {
     public String id;
 
     public idExprNode(position _pos, String _id) {
-        super(_pos);
+        super(_pos,true);
         id = _id;
     }
 
