@@ -1,23 +1,5 @@
 grammar Mx_lite;
 
-Int: 'int';
-Bool: 'bool';
-String: 'string';
-Null: 'null';
-Void: 'void';
-True: 'true';
-False: 'false';
-If: 'if';
-Else: 'else';
-For: 'for';
-While: 'while';
-Break: 'break';
-Continue: 'continue';
-Return: 'return';
-New: 'new';
-Class: 'class';
-This: 'this';
-
 Dot: '.';
 LeftParen: '(';
 RightParen: ')';
@@ -72,8 +54,6 @@ NewLine
 	;
 LineComment: '//' ~[\r\n]* -> skip;
 BlockComment: '/*' .*? '*/' -> skip;
-
-Identifier: [a-zA-Z][a-zA-Z_0-9]*;
 
 constant: BoolConst | IntConst | StringConst | Null;
 BoolConst
@@ -160,3 +140,23 @@ creator
 	;
 
 lambda: '[&]' ('(' parameterList? ')')? '->' suite '(' expressionList? ')';
+
+Int: 'int';
+Bool: 'bool';
+String: 'string';
+Null: 'null';
+Void: 'void';
+True: 'true';
+False: 'false';
+If: 'if';
+Else: 'else';
+For: 'for';
+While: 'while';
+Break: 'break';
+Continue: 'continue';
+Return: 'return';
+New: 'new';
+Class: 'class';
+This: 'this';
+
+Identifier: [a-zA-Z][a-zA-Z_0-9]*;
