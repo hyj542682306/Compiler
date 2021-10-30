@@ -51,7 +51,7 @@ public class SemanticChecker implements ASTvisitor {
 
         //update variables with parameters
         if (it.paraList != null) it.paraList.forEach(x -> nowScope.newVar(x.id,
-                new varSymbol(nowScope.typeGet(x.type), x.id), x.pos));
+                new varSymbol(globalScope.typeGet(x.type), x.id), x.pos));
 
         //record function's type
         hasReturn = false;
@@ -98,6 +98,8 @@ public class SemanticChecker implements ASTvisitor {
     public void visit(varDecStmtNode it) {
         //get the type of this variable
         Type tmp = globalScope.typeGet(it.type);
+
+        if(tmp.isVoid()) throw new semanticError("Variety Definition Error",it.pos);
 
         //get the type of the expression and check
         if (it.expr != null) {
