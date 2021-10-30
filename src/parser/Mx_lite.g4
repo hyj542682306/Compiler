@@ -77,7 +77,8 @@ basType: Identifier | Int | Bool | String;
 varType: basType ('[' ']')*;
 returnType: varType | Void;
 
-program: (varDef | funcDef | classDef)*;
+program: (programBlock)*;
+programBlock: varDef | funcDef | classDef;
 
 varDef: varType varDeclaration (',' varDeclaration)* ';';
 varDeclaration: Identifier ('=' expression)?; 
