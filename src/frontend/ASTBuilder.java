@@ -29,7 +29,7 @@ public class ASTBuilder extends Mx_liteBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitVarType(Mx_liteParser.VarTypeContext ctx) {
-        return new typeNode(new position(ctx), ctx.getText(), (ctx.getChildCount() - 1) / 2);
+        return new typeNode(new position(ctx), ctx.basType().getText(), (ctx.getChildCount() - 1) / 2);
     }
 
     @Override
