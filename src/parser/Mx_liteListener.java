@@ -57,6 +57,16 @@ public interface Mx_liteListener extends ParseTreeListener {
 	 */
 	void exitProgram(Mx_liteParser.ProgramContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link Mx_liteParser#programBlock}.
+	 * @param ctx the parse tree
+	 */
+	void enterProgramBlock(Mx_liteParser.ProgramBlockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Mx_liteParser#programBlock}.
+	 * @param ctx the parse tree
+	 */
+	void exitProgramBlock(Mx_liteParser.ProgramBlockContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link Mx_liteParser#varDef}.
 	 * @param ctx the parse tree
 	 */
