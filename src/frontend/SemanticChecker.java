@@ -309,6 +309,7 @@ public class SemanticChecker implements ASTvisitor {
         }
 
         //exit function
+        hasReturn = false;
         lambdaReturn = false;
         nowScope = nowScope.pScope;
     }
