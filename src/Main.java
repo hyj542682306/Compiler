@@ -15,8 +15,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         String name = "test.mx";
-//        InputStream input = System.in;
-        FileInputStream input = new FileInputStream(name);
+        InputStream input = System.in;
+//        FileInputStream input = new FileInputStream(name);
         try {
             progNode ASTRoot;
             scope globalScope = new scope(null);
