@@ -263,10 +263,6 @@ public class SemanticChecker implements ASTvisitor {
 
     @Override
     public void visit(idExprNode it) {
-        if(nowScope.varMap.containsKey("a"))
-            throw new semanticError("dfdfdf",it.pos);
-        if(globalScope.varMap.containsKey("a"))
-            throw new semanticError("dfaaewfwef",it.pos);
         it.type = nowScope.varGet(it.id, true, it.pos).type;
     }
 
