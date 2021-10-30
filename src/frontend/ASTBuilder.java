@@ -41,16 +41,16 @@ public class ASTBuilder extends Mx_liteBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitProgram(Mx_liteParser.ProgramContext ctx) {
         progNode res = new progNode(new position(ctx));
-        for (ParserRuleContext x : ctx.varDef()) {
+        for (ParserRuleContext x : ctx.programBlock())
             res.List.add(visit(x));
-        }
-        for (ParserRuleContext x : ctx.funcDef()) {
-            res.List.add(visit(x));
-        }
-        for (ParserRuleContext x : ctx.classDef()) {
-            res.List.add(visit(x));
-        }
         return res;
+    }
+
+    @Override
+    public ASTNode visitProgramBlock(Mx_liteParser.ProgramBlockContext ctx) {
+        if(ctx.varDef()!=null)return visit(ctx.varDef());
+        else if(ctx.funcDef()!=null)return visit(ctx.funcDef());
+        else return visit(ctx.classDef());
     }
 
     @Override
