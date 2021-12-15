@@ -1,5 +1,7 @@
 package backend;
 
+import IR.*;
+import IR.inst.*;
 import AST.ASTvisitor;
 import AST.defNode.classDefNode;
 import AST.defNode.funcDefNode;
@@ -7,8 +9,11 @@ import AST.exprNode.*;
 import AST.progNode;
 import AST.stmtNode.*;
 import AST.typeNode;
+import IR.operand.register;
 
 public class IRBuilder implements ASTvisitor {
+    public basicblock nowBlock;
+    public int num=0;
 
     public IRBuilder(){}
 
@@ -35,7 +40,8 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(varDecStmtNode it) {
-
+        if (it.type)
+        alloca nowInst=new alloca(nowBlock,new register(,toString());
     }
 
     @Override

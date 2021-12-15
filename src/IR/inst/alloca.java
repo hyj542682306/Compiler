@@ -1,13 +1,14 @@
 package IR.inst;
 
+import IR.*;
 import IR.type.*;
+import IR.operand.*;
 
 public class alloca extends Inst {
-    public String result;
     public Type ty;
 
-    public alloca(String _result,Type _ty){
-        super();
-        result=_result;ty=_ty;
+    public alloca(basicblock _inblock, register _result, Type _ty){
+        super(_inblock,_result);
+        ty=_ty;
     }
 }
