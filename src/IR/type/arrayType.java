@@ -1,10 +1,10 @@
 package IR.type;
 
-public class arrayType extends Type{
+public class arrayType extends IRType {
     public int arrayDim;
-    public Type type;
+    public IRType type;
 
-    public arrayType(int _arrayDim,Type _type){
+    public arrayType(int _arrayDim, IRType _type){
         super();
         arrayDim=_arrayDim;type=_type;
     }

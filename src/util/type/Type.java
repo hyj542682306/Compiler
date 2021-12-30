@@ -1,5 +1,7 @@
 package util.type;
 
+import IR.type.IRType;
+
 public abstract class Type {
     public boolean isInt() {
         return false;
@@ -24,4 +26,6 @@ public abstract class Type {
     public boolean typeEqual(Type t) {
         return false;
     }
+
+    public IRType getIRType(){return null;}
 }

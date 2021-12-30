@@ -1,6 +1,6 @@
 package IR.type;
 
-public class voidType extends Type{
+public class voidType extends IRType {
     public voidType(){
         super();
     }

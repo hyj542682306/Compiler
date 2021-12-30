@@ -1,6 +1,8 @@
 import AST.*;
 import frontend.*;
 import util.Mx_liteErrorListener;
+import util.error.semanticError;
+import util.position;
 import util.scope;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -15,8 +17,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         String name = "test.mx";
-        InputStream input = System.in;
-//        FileInputStream input = new FileInputStream(name);
+//        InputStream input = System.in;
+        FileInputStream input = new FileInputStream(name);
         try {
             progNode ASTRoot;
             scope globalScope = new scope(null);

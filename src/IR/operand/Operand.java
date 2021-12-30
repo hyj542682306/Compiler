@@ -3,10 +3,10 @@ package IR.operand;
 import IR.type.*;
 
 public abstract class Operand {
-    public Type type;
+    public IRType type;
 
     public Operand(){}
-    public Operand(Type _type){
+    public Operand(IRType _type){
         type=_type;
     }
 }

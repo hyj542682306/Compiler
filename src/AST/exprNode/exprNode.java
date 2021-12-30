@@ -3,12 +3,14 @@ package AST.exprNode;
 import AST.*;
 import AST.defNode.*;
 import AST.stmtNode.*;
+import IR.operand.*;
 import util.position;
 import util.type.*;
 
 public abstract class exprNode extends ASTNode {
     public Type type;
     public boolean assign = false;
+    public Operand operand; //IR 'Type' will have the same name
 
     public exprNode(position _pos) {
         super(_pos);

@@ -6,12 +6,13 @@ import java.util.ArrayList;
 
 public class basicblock {
     public String name;
-    public ArrayList<Inst> InstList;
+    public ArrayList<Inst> AllocaList,InstList;
     public Inst terminator;
     public function infunction;
 
     public basicblock(String _name,function _infunction){
         name=_name;infunction=_infunction;
+        AllocaList=new ArrayList<>();
         InstList=new ArrayList<>();
         infunction=null;
     }
@@ -19,6 +20,8 @@ public class basicblock {
     public void addInst(Inst _inst){
         if (_inst instanceof br||_inst instanceof ret)
             terminator=_inst;
+        else if (_inst instanceof alloca||_inst instanceof global)
+            AllocaList.add(_inst);
         else
             InstList.add(_inst);
     }

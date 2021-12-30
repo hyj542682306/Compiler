@@ -7,9 +7,9 @@ import IR.operand.*;
 public class icmp extends Inst{
     public Operand op1,op2;
     public String cond;
-    public Type ty;
+    public IRType ty;
 
-    public icmp(basicblock _inblock, register _result, String _cond, Type _ty, Operand _op1, Operand _op2){
+    public icmp(basicblock _inblock, register _result, String _cond, IRType _ty, Operand _op1, Operand _op2){
         super(_inblock,_result);
         cond=_cond;ty=_ty;op1=_op1;op2=_op2;
     }
