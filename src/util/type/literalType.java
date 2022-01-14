@@ -52,7 +52,7 @@ public class literalType extends Type {
             if (isInt())
                 irType= new intType(32);
             else if (isBool())
-                irType= new intType(8);
+                irType= new intType(1);
             else if (isString())
                 irType= new pointerType(new intType(8));
             else if (isVoid())

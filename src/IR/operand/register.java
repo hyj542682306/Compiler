@@ -9,4 +9,9 @@ public class register extends Operand {
         super(_type);
         name = _name;
     }
+
+    @Override
+    public String toString() {
+        return "%R" + name;
+    }
 }

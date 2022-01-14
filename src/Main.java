@@ -1,4 +1,7 @@
 import AST.*;
+import IR.module;
+import backend.IRBuilder;
+import backend.IRPrinter;
 import frontend.*;
 import util.Mx_liteErrorListener;
 import util.error.semanticError;
@@ -20,6 +23,7 @@ public class Main {
 //        InputStream input = System.in;
         FileInputStream input = new FileInputStream(name);
         try {
+            //Semantic - lexer, paser, AST
             progNode ASTRoot;
             scope globalScope = new scope(null);
 
@@ -39,6 +43,12 @@ public class Main {
             new TypeCollector(globalScope).visit(ASTRoot);
             globalScope.varMap.clear();
             new SemanticChecker(globalScope).visit(ASTRoot);
+
+            //Codegen - IR, ASM
+            module Module = new module();
+            new IRBuilder(globalScope,Module).visit(ASTRoot);
+            IRPrinter myIR = new IRPrinter("myllvm.ll");
+            myIR.visit(Module);
         } catch (Error error) {
             System.err.println(error.toString());
             throw new RuntimeException();

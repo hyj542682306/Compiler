@@ -1,7 +1,12 @@
 package IR.type;
 
 public class voidType extends IRType {
-    public voidType(){
+    public voidType() {
         super();
+    }
+
+    @Override
+    public String toString() {
+        return "void";
     }
 }
