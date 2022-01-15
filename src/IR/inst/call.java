@@ -32,7 +32,7 @@ public class call extends Inst {
         if (ty instanceof voidType) {
             String res = "call void @" + funcId + "(";
             if (paraList.size() > 0) {
-                res = res + paraList.get(0).type.toString().toString() + " " + paraList.get(0).toString();
+                res = res + paraList.get(0).type.toString() + " " + paraList.get(0).toString();
                 for (int i = 1; i < paraList.size(); ++i) {
                     res = res + ", " + paraList.get(i).type.toString() + " " + paraList.get(i).toString();
                 }

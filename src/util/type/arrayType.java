@@ -20,8 +20,9 @@ public class arrayType extends Type {
 
     @Override
     public IRType getIRType() {
-        if (irType==null)
-            irType=new IR.type.arrayType(dim,type.getIRType());
+        if (irType==null) {
+            irType=type.getIRType();
+        }
         return irType;
     }
 }

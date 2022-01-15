@@ -18,15 +18,17 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class IRBuilder implements ASTvisitor {
     public module Module;
-    public function nowFunction;
+    public function nowFunction, initFunction;
     public basicblock nowBlock, globalEndBlock, globalIncrBlock; // globalEndBlock: "break", globalIncrBlock: "continue"
+    public basicblock initBlock;
     public scope globalScope;
     public classType nowClass = null;
     public ArrayList<Operand> IdxList;
-    public IRType IndexFinalType=null;
+    public IRType IndexFinalType = null;
     public HashMap<String, register> regMap;
     public HashMap<String, globalVariable> globalMap;
     public int num = 0, numString = 0, numLabel = 0;
@@ -37,6 +39,10 @@ public class IRBuilder implements ASTvisitor {
         Module = _Module;
         globalMap = new HashMap<>();
         regMap = new HashMap<>();
+        IdxList = new ArrayList<>();
+        initFunction = new function();
+        initFunction.funcDefine = new define(new voidType(), "_INIT_");
+        initBlock = new basicblock("L0", initFunction);
     }
 
     @Override
@@ -44,6 +50,9 @@ public class IRBuilder implements ASTvisitor {
         //visit
         Global = true;
         it.List.forEach(x -> x.accept(this));
+        initBlock.addInst(new ret(initBlock));
+        initFunction.BlockList.add(initBlock);
+        Module.FuncList.add(initFunction);
     }
 
     @Override
@@ -63,10 +72,13 @@ public class IRBuilder implements ASTvisitor {
         nowFunction = new function();
         numLabel++;
         nowBlock = new basicblock("L" + Integer.toString(numLabel), nowFunction);
+        if (it.id.equals("main")) {
+            nowBlock.addInst(new call(nowBlock, null, new voidType(), "_INIT_", new ArrayList<>()));
+        }
 
         String funcId;
-        if (nowClass==null)funcId=it.id;
-        else funcId=nowClass.name+"_"+it.id;
+        if (nowClass == null) funcId = it.id;
+        else funcId = nowClass.name + "_" + it.id;
         define nowdef = new define(nowIRType, funcId);
         for (varDecStmtNode x : it.paraList) {
             Type tmpType = globalScope.typeGet(x.type);
@@ -114,19 +126,33 @@ public class IRBuilder implements ASTvisitor {
         IRType nowIRType = nowType.getIRType();
         for (int i = 1; i <= it.type.dim; ++i)
             nowIRType = new pointerType(nowIRType);
+
         if (Global) {
+            basicblock tmpBlock = nowBlock;
+            nowBlock = initBlock;
+
             globalVariable nowVar = new globalVariable(it.id, nowIRType);
             //global
-            if (it.expr == null) {
-                if (nowIRType instanceof pointerType || nowIRType instanceof arrayType || nowIRType instanceof classType)
-                    Module.GlobalList.add(new global(nowVar, nowIRType, new nullOperand()));
-                else if (nowIRType instanceof intType)
-                    Module.GlobalList.add(new global(nowVar, nowIRType, new intConst(0)));
-            } else {
-                it.expr.accept(this);
-                Module.GlobalList.add(new global(nowVar, nowIRType, it.expr.operand));
-            }
+            if (nowIRType instanceof pointerType || nowIRType instanceof arrayType || nowIRType instanceof classType)
+                Module.GlobalList.add(new global(nowVar, nowIRType, new nullOperand()));
+            else if (nowIRType instanceof intType)
+                Module.GlobalList.add(new global(nowVar, nowIRType, new intConst(0)));
             globalMap.put(it.id, nowVar);
+
+            if (it.expr != null) {
+                it.expr.accept(this);
+
+                //store
+                Operand exprReg;
+                if (it.expr.operand.loadneed) {
+                    num++;
+                    exprReg = new register(nowIRType, Integer.toString(num));
+                    nowBlock.addInst(new load(nowBlock, (register) exprReg, nowIRType, it.expr.operand));
+                } else exprReg = it.expr.operand;
+                nowBlock.addInst(new store(nowBlock, nowIRType, exprReg, nowVar));
+            }
+
+            nowBlock = tmpBlock;
         } else {
             num++;
             register nowReg = new register(nowIRType, Integer.toString(num));
@@ -134,12 +160,17 @@ public class IRBuilder implements ASTvisitor {
             nowBlock.addInst(new alloca(nowBlock, nowReg, nowIRType));
             regMap.put(it.id, nowReg);
 
-            //store - put the result of expr in the current register
             if (it.expr != null) {
                 it.expr.accept(this);
 
                 //store
-                nowBlock.addInst(new store(nowBlock, nowIRType, it.expr.operand, nowReg));
+                Operand exprReg;
+                if (it.expr.operand.loadneed) {
+                    num++;
+                    exprReg = new register(nowIRType, Integer.toString(num));
+                    nowBlock.addInst(new load(nowBlock, (register) exprReg, nowIRType, it.expr.operand));
+                } else exprReg = it.expr.operand;
+                nowBlock.addInst(new store(nowBlock, nowIRType, exprReg, nowReg));
             }
         }
     }
@@ -312,14 +343,16 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(stringExprNode it) {
-        IRType nowIRType = new pointerType(new intType(8));
         String res = it.value.substring(1, it.value.length() - 1);
+        IRType nowIRType = new arrayType(res.length(), new intType(8));
         numString++;
-        Module.GlobalList.add(new global(new globalVariable("str" + Integer.toString(numString), nowIRType), nowIRType, new stringConst(nowIRType, res)));
-        if (Global)
-            it.operand = new stringConst(nowIRType, it.value.substring(1, it.value.length() - 1));
-        else
-            it.operand = new globalVariable("str" + Integer.toString(numString), nowIRType);
+        globalVariable nowVar = new globalVariable("str" + Integer.toString(numString), nowIRType);
+        Module.GlobalList.add(new global(nowVar, nowIRType, new stringConst(nowIRType, res)));
+
+        num++;
+        register nowReg = new register(new pointerType(new intType(8)), Integer.toString(num));
+        nowBlock.addInst(new getelementptr(nowBlock, nowReg, new pointerType(nowVar.type), nowVar));
+        it.operand = nowReg;
     }
 
     @Override
@@ -337,13 +370,14 @@ public class IRBuilder implements ASTvisitor {
         if (nowIRType instanceof intType) {
             //idExpr's operand
             it.operand = globalMap.get(it.id);
-            if (it.operand != null) return;
-            it.operand = regMap.get(it.id);
+            if (it.operand == null)
+                it.operand = regMap.get(it.id);
             it.operand.loadneed = true;
         } else if (nowIRType instanceof pointerType) {
-            ;
-        } else if (nowIRType instanceof arrayType) {
-            ;
+            it.operand = globalMap.get(it.id);
+            if (it.operand == null)
+                it.operand = regMap.get(it.id);
+            it.operand.loadneed = true;
         } else if (nowIRType instanceof classType) {
             ;
         }
@@ -359,8 +393,16 @@ public class IRBuilder implements ASTvisitor {
         //function()
         if (it instanceof idExprNode) res = ((idExprNode) it).id;
             //class.function()
-        else if (it instanceof classExprNode)
-            res = ((classType) ((classExprNode) it).name.type.getIRType()).name +"_"+ ((classExprNode) it).id;
+        else if (it instanceof classExprNode) {
+            //String-Builtin
+            if (((classExprNode) it).name.type.isString())
+                res = "_str_" + ((classExprNode) it).id;
+            else if (((classExprNode) it).name.type instanceof util.type.arrayType){
+                res = "";
+            }
+            else
+                res = ((classType) ((classExprNode) it).name.type.getIRType()).name + "_" + ((classExprNode) it).id;
+        }
         return res;
     }
 
@@ -370,13 +412,20 @@ public class IRBuilder implements ASTvisitor {
         IRType nowIRType = it.type.getIRType();
         ArrayList<Operand> paraList = new ArrayList<>();
 
+        //String-Builtin
+        if (it.id instanceof classExprNode && ((classExprNode) it.id).name.type.isString()) {
+            it.id.accept(this);
+            paraList.add(((classExprNode) it.id).name.operand);
+        }
+
         for (exprNode x : it.exprList.exprList) {
             x.accept(this);
+            IRType exprIRType = x.type.getIRType();
             Operand nowOp;
             if (x.operand.loadneed) {
                 num++;
-                nowOp = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new load(nowBlock, (register) nowOp, nowIRType, x.operand));
+                nowOp = new register(exprIRType, Integer.toString(num));
+                nowBlock.addInst(new load(nowBlock, (register) nowOp, exprIRType, x.operand));
             } else nowOp = x.operand;
             paraList.add(nowOp);
         }
@@ -395,10 +444,10 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(indexExprNode it) {
-        if (it.bas instanceof indexExprNode){
+        if (it.bas instanceof indexExprNode) {
             it.off.accept(this);
 
-            IRType offIRType=it.off.operand.type;
+            IRType offIRType = it.off.operand.type;
             Operand offReg;
             if (it.off.operand.loadneed) {
                 num++;
@@ -407,17 +456,16 @@ public class IRBuilder implements ASTvisitor {
             } else offReg = it.off.operand;
             IdxList.add(offReg);
 
-            if (IndexFinalType==null)
-                IndexFinalType=it.type.getIRType();
+            if (IndexFinalType == null)
+                IndexFinalType = it.type.getIRType();
             it.bas.accept(this);
 
-            it.operand=it.bas.operand;
-        }
-        else {
+            it.operand = it.bas.operand;
+        } else {
             it.bas.accept(this);
             it.off.accept(this);
 
-            IRType offIRType=it.off.operand.type;
+            IRType offIRType = it.off.operand.type;
             Operand offReg;
             if (it.off.operand.loadneed) {
                 num++;
@@ -427,7 +475,7 @@ public class IRBuilder implements ASTvisitor {
             IdxList.add(offReg);
             Collections.reverse(IdxList);
 
-            IRType basIRType=it.bas.operand.type;
+            IRType basIRType = it.bas.operand.type;
             Operand basReg;
             if (it.bas.operand.loadneed) {
                 num++;
@@ -436,13 +484,13 @@ public class IRBuilder implements ASTvisitor {
             } else basReg = it.bas.operand;
 
             num++;
-            register nowReg=new register(IndexFinalType,Integer.toString(num));
-            nowBlock.addInst(new getelementptr(nowBlock,nowReg,basIRType,basReg,IdxList));
+            register nowReg = new register(IndexFinalType, Integer.toString(num));
+            nowBlock.addInst(new getelementptr(nowBlock, nowReg, (pointerType) basIRType, basReg, IdxList));
 
-            it.operand=nowReg;
+            it.operand = nowReg;
 
-            IndexFinalType=null;
-            IdxList=new ArrayList<>();
+            IndexFinalType = null;
+            IdxList = new ArrayList<>();
         }
     }
 
@@ -550,7 +598,87 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(newExprNode it) {
+        IRType nowIRType=it.type.getIRType();
+        int dim=it.typeN.dim;
 
+        //null
+        if (it.exprList.size()==0){
+            it.operand=new nullOperand();
+            return ;
+        }
+
+        //the first dimension
+        exprNode x=it.exprList.get(0);
+        x.accept(this);
+        Operand exprReg;
+        if (x.operand.loadneed) {
+            num++;
+            exprReg = new register(new intType(32), Integer.toString(num));
+            nowBlock.addInst(new load(nowBlock, (register) exprReg, new intType(32), x.operand));
+        } else exprReg = x.operand;
+
+        //malloc
+        //1. malloc an additional space to record the size
+        //2. move the begin pointer
+
+        //sum
+        num++;
+        register sumReg=new register(new intType(32),Integer.toString(num));
+        nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),exprReg,new intConst(1)));
+
+        //malloc
+        num++;
+        register callReg=new register(new pointerType(new intType(8)),Integer.toString(num));
+        ArrayList<Operand> nowparaList=new ArrayList<>();
+        nowparaList.add(sumReg);
+        nowBlock.addInst(new call(nowBlock,callReg,new pointerType(new intType(8)),"_f_malloc",nowparaList));
+
+        //bitcast
+        IRType trueIRType=nowIRType;
+        for (int j =0;j<dim;++j)trueIRType=new pointerType(trueIRType);
+        num++;
+        register bitReg=new register(trueIRType,Integer.toString(num));
+        nowBlock.addInst(new bitcast(nowBlock,bitReg,new pointerType(new intType(8)),callReg,trueIRType));
+
+        //save the size
+//        nowBlock.addInst(new store(nowBlock,new intType(32),));
+
+        //move the pointer
+        num++;
+        register finalReg=new register(trueIRType,Integer.toString(num));
+        nowparaList=new ArrayList<>();
+        nowparaList.add(new intConst(1));
+        nowBlock.addInst(new getelementptr(nowBlock,finalReg,(pointerType) trueIRType,bitReg,nowparaList));
+
+//        for (int i=0;i<it.exprList.size();++i){
+//            exprNode x=it.exprList.get(i);
+//            x.accept(this);
+//
+//            Operand exprReg;
+//            if (x.operand.loadneed) {
+//                num++;
+//                exprReg = new register(new intType(32), Integer.toString(num));
+//                nowBlock.addInst(new load(nowBlock, (register) exprReg, new intType(32), x.operand));
+//            } else exprReg = x.operand;
+//
+//            num++;
+//            register sumReg=new register(new intType(32),Integer.toString(num));
+//            nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),exprReg,new intConst(1)));
+//
+//            num++;
+//            register callReg=new register(new pointerType(new intType(8)),Integer.toString(num));
+//            ArrayList<Operand> nowparaList=new ArrayList<>();
+//            nowparaList.add(sumReg);
+//            nowBlock.addInst(new call(nowBlock,callReg,new pointerType(new intType(8)),"_f_malloc",nowparaList));
+//
+//            IRType trueIRType=nowIRType;
+//            for (int j =0;j<dim-i-1;++j)trueIRType=new pointerType(trueIRType);
+//            num++;
+//            register bitReg=new register(trueIRType,Integer.toString(num));
+//            nowBlock.addInst(new bitcast(nowBlock,bitReg,new pointerType(new intType(8)),callReg,trueIRType));
+//        }
+
+        it.operand=finalReg;
     }
 
     @Override
@@ -705,13 +833,81 @@ public class IRBuilder implements ASTvisitor {
                 case "&&" -> it.operand = new boolConst(((boolConst) operand1).val && ((boolConst) operand2).val);
             }
             return;
-        } else if (operand1 instanceof stringConst && operand2 instanceof stringConst) {
+        }
+
+        //String
+        if (it.expr1.type.isString()) {
             switch (it.op) {
-                case "+" -> it.operand = new stringConst(operand1.type, ((stringConst) operand1).str + ((stringConst) operand2).str);
-                case "<" -> it.operand = new boolConst(((stringConst) operand1).str.compareTo(((stringConst) operand2).str) < 0);
-                case ">" -> it.operand = new boolConst(((stringConst) operand1).str.compareTo(((stringConst) operand2).str) > 0);
-                case "<=" -> it.operand = new boolConst(((stringConst) operand1).str.compareTo(((stringConst) operand2).str) <= 0);
-                case ">=" -> it.operand = new boolConst(((stringConst) operand1).str.compareTo(((stringConst) operand2).str) >= 0);
+                case "+" -> {
+                    ++num;
+                    register newReg = new register(nowIRType, Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, nowIRType, "_str_concatenate", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case "<" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_lt", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case "<=" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_le", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case ">" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_gt", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case ">=" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_ge", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case "==" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_eq", nowparaList));
+
+                    it.operand = newReg;
+                }
+                case "!=" -> {
+                    ++num;
+                    register newReg = new register(new intType(1), Integer.toString(num));
+                    ArrayList<Operand> nowparaList = new ArrayList<>();
+                    nowparaList.add(operand1);
+                    nowparaList.add(operand2);
+                    nowBlock.addInst(new call(nowBlock, newReg, new intType(1), "_str_ne", nowparaList));
+
+                    it.operand = newReg;
+                }
             }
             return;
         }

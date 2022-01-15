@@ -12,10 +12,30 @@ import java.io.PrintWriter;
 
 public class IRPrinter implements IRvisitor {
     public PrintWriter file_print;
-    private String tab = "    ";
+    private final String tab = "    ";
 
     public IRPrinter(String path) throws FileNotFoundException {
         file_print = new PrintWriter(new FileOutputStream(path));
+        file_print.println("declare dso_local void @print(i8* %0)");
+        file_print.println("declare dso_local void @println(i8* %0)");
+        file_print.println("declare dso_local void @printInt(i32 %0)");
+        file_print.println("declare dso_local void @printlnInt(i32 %0)");
+        file_print.println("declare dso_local i32 @getInt()");
+        file_print.println("declare dso_local i8* @toString(i32 %0)");
+        file_print.println("declare dso_local i8* @getString()");
+        file_print.println("declare dso_local i32 @_str_ord(i8* %0, i32 %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_eq(i8* %0, i8* %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_ne(i8* %0, i8* %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_lt(i8* %0, i8* %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_le(i8* %0, i8* %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_gt(i8* %0, i8* %1)");
+        file_print.println("declare dso_local zeroext i1 @_str_ge(i8* %0, i8* %1)");
+        file_print.println("declare dso_local i8* @_str_concatenate(i8* %0, i8* %1)");
+        file_print.println("declare dso_local i8* @_f_malloc(i32 %0)");
+        file_print.println("declare dso_local i32 @_str_length(i8* %0)");
+        file_print.println("declare dso_local i8* @_str_substring(i8* %0, i32 %1, i32 %2)");
+        file_print.println("declare dso_local i32 @_str_parseInt(i8* %0)");
+        file_print.println("");
     }
 
     @Override
