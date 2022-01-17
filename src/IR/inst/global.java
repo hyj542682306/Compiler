@@ -33,10 +33,10 @@ public class global extends Inst {
     public String toString() {
         if (ty instanceof classType) {
             String res = ty.toString() + " = type { ";
-            if (((classType) ty).typeList.size()>0) {
-                res=res+((classType) ty).typeList.get(0).toString();
-                for (int i=1;i<((classType) ty).typeList.size();++i)
-                    res = res + ", "+((classType) ty).typeList.get(i).toString();
+            if (((classType) ty).typeList.size() > 0) {
+                res = res + ((classType) ty).typeList.get(0).toString();
+                for (int i = 1; i < ((classType) ty).typeList.size(); ++i)
+                    res = res + ", " + ((classType) ty).typeList.get(i).toString();
             }
             res = res + " }";
             return res;
