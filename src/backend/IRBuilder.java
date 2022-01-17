@@ -610,21 +610,33 @@ public class IRBuilder implements ASTvisitor {
         //the first dimension
         exprNode x=it.exprList.get(0);
         x.accept(this);
-        Operand exprReg;
+        Operand sizeReg;
         if (x.operand.loadneed) {
             num++;
-            exprReg = new register(new intType(32), Integer.toString(num));
-            nowBlock.addInst(new load(nowBlock, (register) exprReg, new intType(32), x.operand));
-        } else exprReg = x.operand;
+            sizeReg = new register(new intType(32), Integer.toString(num));
+            nowBlock.addInst(new load(nowBlock, (register) sizeReg, new intType(32), x.operand));
+        } else sizeReg = x.operand;
 
         //malloc
         //1. malloc an additional space to record the size
         //2. move the begin pointer
 
+        //mul
+        num++;
+        register mulReg=new register(new intType(32),Integer.toString(num));
+        int singleSize = 0;
+        if (dim==1){
+            if (it.typeN.type.equals("int"))singleSize=4;
+            else if (it.typeN.type.equals("bool"))singleSize=1;
+            else if (it.typeN.type.equals("string"))singleSize=8;
+        }
+        else singleSize=8;
+        nowBlock.addInst(new binary(nowBlock,mulReg,"mul",new intType(32),sizeReg,new intConst(singleSize)));
+        
         //sum
         num++;
         register sumReg=new register(new intType(32),Integer.toString(num));
-        nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),exprReg,new intConst(1)));
+        nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),mulReg,new intConst(4)));
 
         //malloc
         num++;
@@ -633,52 +645,144 @@ public class IRBuilder implements ASTvisitor {
         nowparaList.add(sumReg);
         nowBlock.addInst(new call(nowBlock,callReg,new pointerType(new intType(8)),"_f_malloc",nowparaList));
 
-        //bitcast
-        IRType trueIRType=nowIRType;
-        for (int j =0;j<dim;++j)trueIRType=new pointerType(trueIRType);
+        //bitcast to i32*
+        pointerType sizepointerIRType= new pointerType(new intType(32));
         num++;
-        register bitReg=new register(trueIRType,Integer.toString(num));
-        nowBlock.addInst(new bitcast(nowBlock,bitReg,new pointerType(new intType(8)),callReg,trueIRType));
+        register sizepointerReg=new register(sizepointerIRType,Integer.toString(num));
+        nowBlock.addInst(new bitcast(nowBlock,sizepointerReg,new pointerType(new intType(8)),callReg,sizepointerIRType));
 
         //save the size
-//        nowBlock.addInst(new store(nowBlock,new intType(32),));
+        nowBlock.addInst(new store(nowBlock,new intType(32),sizeReg,sizepointerReg));
 
         //move the pointer
         num++;
-        register finalReg=new register(trueIRType,Integer.toString(num));
+        register moveReg=new register(sizepointerIRType,Integer.toString(num));
         nowparaList=new ArrayList<>();
         nowparaList.add(new intConst(1));
-        nowBlock.addInst(new getelementptr(nowBlock,finalReg,(pointerType) trueIRType,bitReg,nowparaList));
+        nowBlock.addInst(new getelementptr(nowBlock,moveReg, sizepointerIRType,sizepointerReg,nowparaList));
 
-//        for (int i=0;i<it.exprList.size();++i){
-//            exprNode x=it.exprList.get(i);
-//            x.accept(this);
-//
-//            Operand exprReg;
-//            if (x.operand.loadneed) {
-//                num++;
-//                exprReg = new register(new intType(32), Integer.toString(num));
-//                nowBlock.addInst(new load(nowBlock, (register) exprReg, new intType(32), x.operand));
-//            } else exprReg = x.operand;
-//
-//            num++;
-//            register sumReg=new register(new intType(32),Integer.toString(num));
-//            nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),exprReg,new intConst(1)));
-//
-//            num++;
-//            register callReg=new register(new pointerType(new intType(8)),Integer.toString(num));
-//            ArrayList<Operand> nowparaList=new ArrayList<>();
-//            nowparaList.add(sumReg);
-//            nowBlock.addInst(new call(nowBlock,callReg,new pointerType(new intType(8)),"_f_malloc",nowparaList));
-//
-//            IRType trueIRType=nowIRType;
-//            for (int j =0;j<dim-i-1;++j)trueIRType=new pointerType(trueIRType);
-//            num++;
-//            register bitReg=new register(trueIRType,Integer.toString(num));
-//            nowBlock.addInst(new bitcast(nowBlock,bitReg,new pointerType(new intType(8)),callReg,trueIRType));
-//        }
+        //bitcase to the trueIRType
+        IRType trueIRType=nowIRType;
+        for (int j =0;j<dim;++j)trueIRType=new pointerType(trueIRType);
+        num++;
+        register finalReg=new register(trueIRType,Integer.toString(num));
+        nowBlock.addInst(new bitcast(nowBlock,finalReg,sizepointerIRType,sizepointerReg,trueIRType));
 
         it.operand=finalReg;
+
+        //the lower dimension
+        if (it.exprList.size()>1){
+            Operand presizeReg;
+            register preReg,incrReg,condReg,newcondReg,addrReg;
+            for (int i=1;i<it.exprList.size();++i){
+                preReg=finalReg;
+                presizeReg=sizeReg;
+                num++;
+                incrReg=new register(new intType(32),Integer.toString(num));
+                nowBlock.addInst(new binary(nowBlock,incrReg,"add",new intType(32),new intConst(0),new intConst(0)));
+
+                //create a loop
+                ++num;
+                basicblock condBlock=new basicblock("L"+Integer.toString(num),nowFunction);
+                ++num;
+                basicblock bodyBlock=new basicblock("L"+Integer.toString(num),nowFunction);
+                ++num;
+                basicblock incrBlock=new basicblock("L"+Integer.toString(num),nowFunction);
+                ++num;
+                basicblock endBlock=new basicblock("L"+Integer.toString(num),nowFunction);
+
+                nowBlock.addInst(new br(nowBlock,condBlock));
+                nowFunction.BlockList.add(nowBlock);
+
+                //cond
+                nowBlock=condBlock;
+                ++num;
+                condReg=new register(new intType(1),Integer.toString(num));
+                nowBlock.addInst(new icmp(nowBlock,condReg,"ne",new intType(32),incrReg,presizeReg));
+                nowBlock.addInst(new br(nowBlock,condReg,bodyBlock,endBlock));
+                nowFunction.BlockList.add(nowBlock);
+
+                //body
+                nowBlock=bodyBlock;
+                x=it.exprList.get(i);
+                x.accept(this);
+                if (x.operand.loadneed) {
+                    num++;
+                    sizeReg = new register(new intType(32), Integer.toString(num));
+                    nowBlock.addInst(new load(nowBlock, (register) sizeReg, new intType(32), x.operand));
+                } else sizeReg = x.operand;
+
+                //mul
+                num++;
+                mulReg=new register(new intType(32),Integer.toString(num));
+                singleSize = 0;
+                if (dim-i==1){
+                    if (it.typeN.type.equals("int"))singleSize=4;
+                    else if (it.typeN.type.equals("bool"))singleSize=1;
+                    else if (it.typeN.type.equals("string"))singleSize=8;
+                }
+                else singleSize=8;
+                nowBlock.addInst(new binary(nowBlock,mulReg,"mul",new intType(32),sizeReg,new intConst(singleSize)));
+
+                //sum
+                num++;
+                sumReg=new register(new intType(32),Integer.toString(num));
+                nowBlock.addInst(new binary(nowBlock,sumReg,"add",new intType(32),mulReg,new intConst(4)));
+
+                //malloc
+                num++;
+                callReg=new register(new pointerType(new intType(8)),Integer.toString(num));
+                nowparaList=new ArrayList<>();
+                nowparaList.add(sumReg);
+                nowBlock.addInst(new call(nowBlock,callReg,new pointerType(new intType(8)),"_f_malloc",nowparaList));
+
+                //bitcast to i32*
+                sizepointerIRType= new pointerType(new intType(32));
+                num++;
+                sizepointerReg=new register(sizepointerIRType,Integer.toString(num));
+                nowBlock.addInst(new bitcast(nowBlock,sizepointerReg,new pointerType(new intType(8)),callReg,sizepointerIRType));
+
+                //save the size
+                nowBlock.addInst(new store(nowBlock,new intType(32),sizeReg,sizepointerReg));
+
+                //move the pointer
+                num++;
+                moveReg=new register(sizepointerIRType,Integer.toString(num));
+                nowparaList=new ArrayList<>();
+                nowparaList.add(new intConst(1));
+                nowBlock.addInst(new getelementptr(nowBlock,moveReg, sizepointerIRType,sizepointerReg,nowparaList));
+
+                //bitcase to the trueIRType
+                trueIRType=nowIRType;
+                for (int j =0;j<dim-i;++j)trueIRType=new pointerType(trueIRType);
+                num++;
+                finalReg=new register(trueIRType,Integer.toString(num));
+                nowBlock.addInst(new bitcast(nowBlock,finalReg,sizepointerIRType,sizepointerReg,trueIRType));
+
+                //store
+                num++;
+                addrReg=new register(preReg.type,Integer.toString(num));
+                nowparaList=new ArrayList<>();
+                nowparaList.add(condReg);
+                nowBlock.addInst(new getelementptr(nowBlock,addrReg,(pointerType) preReg.type,preReg,nowparaList));
+                nowBlock.addInst(new store(nowBlock,trueIRType,finalReg,addrReg));
+
+                nowBlock.addInst(new br(nowBlock,incrBlock));
+                nowFunction.BlockList.add(nowBlock);
+
+                //incr
+                nowBlock=incrBlock;
+                ++num;
+                newcondReg=new register(new intType(32),Integer.toString(num));
+                nowBlock.addInst(new binary(condBlock,newcondReg,"add",new intType(32),incrReg,new intConst(1)));
+                condReg=newcondReg;
+                nowBlock.addInst(new br(nowBlock,condBlock));
+                nowFunction.BlockList.add(nowBlock);
+
+                //end
+                nowBlock=endBlock;
+            }
+        }
     }
 
     @Override
