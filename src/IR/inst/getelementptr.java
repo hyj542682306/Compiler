@@ -10,21 +10,25 @@ import IR.type.pointerType;
 
 import java.util.ArrayList;
 
-public class getelementptr extends Inst{
+public class getelementptr extends Inst {
     public pointerType ty;
     public Operand value;
     public ArrayList<Operand> IdxList;
 
-    public getelementptr(basicblock _inblock, register _result, pointerType _ty, Operand _value){
-        super(_inblock,_result);
-        ty=_ty;value=_value;
-        IdxList=new ArrayList<>();
+    public getelementptr(basicblock _inblock, register _result, pointerType _ty, Operand _value) {
+        super(_inblock, _result);
+        ty = _ty;
+        value = _value;
+        IdxList = new ArrayList<>();
         IdxList.add(new intConst(0));
         IdxList.add(new intConst(0));
     }
-    public getelementptr(basicblock _inblock, register _result, pointerType _ty, Operand _value, ArrayList<Operand> _IdxList){
-        super(_inblock,_result);
-        ty=_ty;value=_value;IdxList=_IdxList;
+
+    public getelementptr(basicblock _inblock, register _result, pointerType _ty, Operand _value, ArrayList<Operand> _IdxList) {
+        super(_inblock, _result);
+        ty = _ty;
+        value = _value;
+        IdxList = _IdxList;
     }
 
     @Override
@@ -34,7 +38,7 @@ public class getelementptr extends Inst{
 
     @Override
     public String toString() {
-        String res=result.toString()+" = getelementptr inbounds "+ ty.type.toString()+", "+ty.toString()+" "+value.toString();
+        String res = result.toString() + " = getelementptr inbounds " + ty.type.toString() + ", " + ty.toString() + " " + value.toString();
         for (Operand x : IdxList) {
             res = res + ", " + x.type.toString() + " " + x.toString();
         }

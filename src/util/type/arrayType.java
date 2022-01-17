@@ -5,7 +5,7 @@ import IR.type.IRType;
 public class arrayType extends Type {
     public Type type;
     public int dim;
-    public IRType irType=null;
+    public IRType irType = null;
 
     public arrayType(Type _type, int _dim) {
         type = _type;
@@ -20,8 +20,8 @@ public class arrayType extends Type {
 
     @Override
     public IRType getIRType() {
-        if (irType==null) {
-            irType=type.getIRType();
+        if (irType == null) {
+            irType = type.getIRType();
         }
         return irType;
     }

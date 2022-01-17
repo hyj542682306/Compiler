@@ -18,7 +18,7 @@ public abstract class exprNode extends ASTNode {
 
     public exprNode(position _pos, boolean _assign) {
         super(_pos);
-        assign=_assign;
+        assign = _assign;
     }
 
     public exprNode(position _pos, Type _type, boolean _assign) {

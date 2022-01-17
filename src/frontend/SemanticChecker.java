@@ -104,7 +104,7 @@ public class SemanticChecker implements ASTvisitor {
         //get the type of this variable
         Type tmp = globalScope.typeGet(it.type);
 
-        if(tmp.isVoid()) throw new semanticError("Variety Definition Error",it.pos);
+        if (tmp.isVoid()) throw new semanticError("Variety Definition Error", it.pos);
 
         //get the type of the expression and check
         if (it.expr != null) {
@@ -486,8 +486,8 @@ public class SemanticChecker implements ASTvisitor {
         it.expr1.accept(this);
         it.expr2.accept(this);
 
-        if(it.expr1.type==null){
-            throw new semanticError("imps",it.pos);
+        if (it.expr1.type == null) {
+            throw new semanticError("imps", it.pos);
         }
 
         switch (it.op) {

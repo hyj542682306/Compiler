@@ -27,5 +27,7 @@ public abstract class Type {
         return false;
     }
 
-    public IRType getIRType(){return null;}
+    public IRType getIRType() {
+        return null;
+    }
 }

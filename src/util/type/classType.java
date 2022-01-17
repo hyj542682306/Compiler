@@ -16,7 +16,7 @@ public class classType extends Type {
 
     public classType(String _id) {
         id = _id;
-        irType=new IR.type.classType(_id);
+        irType = new IR.type.classType(_id);
     }
 
     @Override

@@ -53,8 +53,8 @@ public class scope {
     }
 
     public Type typeGet(typeNode type) {
-        if(type.dim==0)return typeMap.get(type.type);
-        else return new arrayType(typeMap.get(type.type),type.dim);
+        if (type.dim == 0) return typeMap.get(type.type);
+        else return new arrayType(typeMap.get(type.type), type.dim);
     }
 
 }

@@ -51,8 +51,8 @@ public class ASTBuilder extends Mx_liteBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitProgramBlock(Mx_liteParser.ProgramBlockContext ctx) {
-        if(ctx.varDef()!=null)return visit(ctx.varDef());
-        else if(ctx.funcDef()!=null)return visit(ctx.funcDef());
+        if (ctx.varDef() != null) return visit(ctx.varDef());
+        else if (ctx.funcDef() != null) return visit(ctx.funcDef());
         else return visit(ctx.classDef());
     }
 

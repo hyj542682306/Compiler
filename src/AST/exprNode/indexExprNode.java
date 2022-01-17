@@ -10,7 +10,7 @@ public class indexExprNode extends exprNode {
     public exprNode off;
 
     public indexExprNode(position _pos, exprNode _bas, exprNode _off) {
-        super(_pos,true);
+        super(_pos, true);
         bas = _bas;
         off = _off;
     }

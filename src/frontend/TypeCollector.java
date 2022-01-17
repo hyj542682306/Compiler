@@ -47,9 +47,9 @@ public class TypeCollector implements ASTvisitor {
     @Override
     public void visit(varDecStmtNode it) {
         varSymbol tmp;
-        if(nowClass==null)tmp=globalScope.varMap.get(it.id);
-        else tmp=((classType)globalScope.typeMap.get(nowClass)).varMap.get(it.id);
-        tmp.type=globalScope.typeGet(it.type);
+        if (nowClass == null) tmp = globalScope.varMap.get(it.id);
+        else tmp = ((classType) globalScope.typeMap.get(nowClass)).varMap.get(it.id);
+        tmp.type = globalScope.typeGet(it.type);
     }
 
     @Override

@@ -7,7 +7,7 @@ import IR.type.voidType;
 
 public class literalType extends Type {
     public String id;
-    public IRType irType=null;
+    public IRType irType = null;
 
     public literalType(String _id) {
         id = _id;
@@ -47,16 +47,16 @@ public class literalType extends Type {
     }
 
     @Override
-    public IRType getIRType(){
-        if (irType==null) {
+    public IRType getIRType() {
+        if (irType == null) {
             if (isInt())
-                irType= new intType(32);
+                irType = new intType(32);
             else if (isBool())
-                irType= new intType(1);
+                irType = new intType(1);
             else if (isString())
-                irType= new pointerType(new intType(8));
+                irType = new pointerType(new intType(8));
             else if (isVoid())
-                irType= new voidType();
+                irType = new voidType();
         }
         return irType;
     }

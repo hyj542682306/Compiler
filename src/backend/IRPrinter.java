@@ -120,6 +120,6 @@ public class IRPrinter implements IRvisitor {
 
     @Override
     public void visit(getelementptr it) {
-        file_print.println(tab+it.toString());
+        file_print.println(tab + it.toString());
     }
 }

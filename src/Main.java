@@ -46,7 +46,7 @@ public class Main {
 
             //Codegen - IR, ASM
             module Module = new module();
-            new IRBuilder(globalScope,Module).visit(ASTRoot);
+            new IRBuilder(globalScope, Module).visit(ASTRoot);
             IRPrinter myIR = new IRPrinter("myllvm.ll");
             myIR.visit(Module);
         } catch (Error error) {
