@@ -1,5 +1,6 @@
 package backend;
 
+import AST.ASTNode;
 import IR.*;
 import IR.inst.*;
 import AST.ASTvisitor;
@@ -27,7 +28,7 @@ public class IRBuilder implements ASTvisitor {
     public HashMap<String, register> regMap;
     public HashMap<String, globalVariable> globalMap;
     public int num = 0, numString = 0, numLabel = 0;
-    public boolean Global;
+    public boolean Global,classCollector;
 
     public IRBuilder(scope _globalScope, module _Module) {
         globalScope = _globalScope;
@@ -41,6 +42,13 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(progNode it) {
+        //classCollector
+        classCollector=true;
+        for (ASTNode x: it.List)
+            if (x instanceof classDefNode)
+                x.accept(this);
+        classCollector=false;
+
         //visit
         Global = true;
         it.List.forEach(x -> x.accept(this));
@@ -132,7 +140,21 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(classDefNode it) {
-
+        //classCollector
+        if (classCollector){
+            Type nowType=globalScope.typeMap.get(it.id);
+            IRType nowIRType=nowType.getIRType();
+            for (varDecStmtNode x:it.varList){
+                Type xType=globalScope.typeGet(x.type);
+                IRType xIRType=xType.getIRType();
+                for (int i=1;i<=x.type.dim;++i)
+                    xIRType=new pointerType(xIRType);
+                ((classType) nowIRType).typeList.add(xIRType);
+                ((classType) nowIRType).nameList.add(x.id);
+            }
+            Module.GlobalList.add(new global(nowIRType));
+            return ;
+        }
     }
 
     @Override
