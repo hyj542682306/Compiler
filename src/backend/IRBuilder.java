@@ -27,8 +27,6 @@ public class IRBuilder implements ASTvisitor {
     public basicblock initBlock;
     public scope globalScope;
     public classType nowClass = null;
-    public ArrayList<Operand> IdxList;
-    public IRType IndexFinalType = null;
     public HashMap<String, register> regMap;
     public HashMap<String, globalVariable> globalMap;
     public int num = 0, numString = 0, numLabel = 0;
@@ -39,7 +37,6 @@ public class IRBuilder implements ASTvisitor {
         Module = _Module;
         globalMap = new HashMap<>();
         regMap = new HashMap<>();
-        IdxList = new ArrayList<>();
         initFunction = new function();
         initFunction.funcDefine = new define(new voidType(), "_INIT_");
         initBlock = new basicblock("L0", initFunction);
@@ -443,9 +440,18 @@ public class IRBuilder implements ASTvisitor {
 
         //String-Builtin
         if (it.id instanceof classExprNode && ((classExprNode) it.id).name.type.isString()) {
-            it.id.accept(this);
+            ((classExprNode) it.id).name.accept(this);
             funcId="_str_"+((classExprNode) it.id).id;
-            paraList.add(((classExprNode) it.id).name.operand);
+
+            Operand strReg;
+            if (((classExprNode) it.id).name.operand.loadneed){
+                IRType newType=((pointerType)((classExprNode) it.id).name.operand.type).type;
+                num++;
+                strReg=new register(newType,Integer.toString(num));
+                nowBlock.addInst(new load(nowBlock,(register) strReg,newType,((classExprNode) it.id).name.operand));
+            }
+            else strReg=((classExprNode) it.id).name.operand;
+            paraList.add(strReg);
         }
         //Array-Builtin - size()
         else if (it.id instanceof classExprNode && ((classExprNode) it.id).name.type instanceof util.type.arrayType){
