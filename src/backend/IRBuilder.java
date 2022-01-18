@@ -28,6 +28,9 @@ public class IRBuilder implements ASTvisitor {
     public register nowClassPointer = null;
     public HashMap<String, register> regMap;
     public HashMap<String, globalVariable> globalMap;
+    public ret lastRET = null;
+    public IRType retType = null;
+    public ArrayList<String> classfuncList;
     public int num = 0, numString = 0, numLabel = 0;
     public boolean Global, classCollector, structFunction;
 
@@ -75,7 +78,10 @@ public class IRBuilder implements ASTvisitor {
             nowIRType = nowType.getIRType();
             for (int i = 1; i <= it.type.dim; ++i)
                 nowIRType = new pointerType(nowIRType);
+            if (nowIRType instanceof classType)
+                nowIRType = new pointerType(nowIRType);
         }
+        retType = nowIRType;
 
 
         HashMap<String, register> tmpregMap = regMap;
@@ -103,7 +109,9 @@ public class IRBuilder implements ASTvisitor {
             for (varDecStmtNode x : it.paraList) {
                 Type tmpType = globalScope.typeGet(x.type);
                 IRType tmpIRType = tmpType.getIRType();
-                for (int i = 1; i <= it.type.dim; ++i)
+                for (int i = 1; i <= x.type.dim; ++i)
+                    tmpIRType = new pointerType(tmpIRType);
+                if (tmpIRType instanceof classType)
                     tmpIRType = new pointerType(tmpIRType);
                 nowdef.TypeList.add(tmpIRType);
                 num++;
@@ -125,7 +133,9 @@ public class IRBuilder implements ASTvisitor {
             for (varDecStmtNode x : it.paraList) {
                 Type tmpType = globalScope.typeGet(x.type);
                 IRType tmpIRType = tmpType.getIRType();
-                for (int i = 1; i <= it.type.dim; ++i)
+                for (int i = 1; i <= x.type.dim; ++i)
+                    tmpIRType = new pointerType(tmpIRType);
+                if (tmpIRType instanceof classType)
                     tmpIRType = new pointerType(tmpIRType);
                 num++;
                 register tmpReg = new register(new pointerType(tmpIRType), Integer.toString(num));
@@ -145,9 +155,11 @@ public class IRBuilder implements ASTvisitor {
         //void and main function can have no return
         if (nowBlock.terminator == null) {
             if (it.id.equals("main"))
-                nowBlock.terminator = new ret(nowBlock,new intType(32),new intConst(0));
-            else
+                nowBlock.terminator = new ret(nowBlock, new intType(32), new intConst(0));
+            else if (nowIRType instanceof voidType)
                 nowBlock.terminator = new ret(nowBlock);
+            else
+                nowBlock.terminator = lastRET;
         }
         nowFunction.BlockList.add(nowBlock);
 
@@ -166,6 +178,8 @@ public class IRBuilder implements ASTvisitor {
                 IRType xIRType = xType.getIRType();
                 for (int i = 1; i <= x.type.dim; ++i)
                     xIRType = new pointerType(xIRType);
+                if (xIRType instanceof classType)
+                    xIRType = new pointerType(xIRType);
                 ((classType) nowIRType).typeList.add(xIRType);
                 ((classType) nowIRType).nameList.add(x.id);
             }
@@ -174,6 +188,9 @@ public class IRBuilder implements ASTvisitor {
         }
 
         nowClass = (classType) globalScope.typeMap.get(it.id).getIRType();
+        classfuncList = new ArrayList<>();
+        for (funcDefNode x : it.funcList)
+            classfuncList.add(x.id);
         if (it.struct != null) {
             structFunction = true;
             it.struct.accept(this);
@@ -408,8 +425,10 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(returnStmtNode it) {
-        if (it.expr == null) nowBlock.addInst(new ret(nowBlock));
-        else {
+        if (it.expr == null) {
+            lastRET = new ret(nowBlock);
+            nowBlock.addInst(lastRET);
+        } else {
             it.expr.accept(this);
             Operand exprReg;
             IRType valueIRType = it.expr.operand.type;
@@ -419,7 +438,8 @@ public class IRBuilder implements ASTvisitor {
                 exprReg = new register(newIRType, Integer.toString(num));
                 nowBlock.addInst(new load(nowBlock, (register) exprReg, newIRType, it.expr.operand));
             } else exprReg = it.expr.operand;
-            nowBlock.addInst(new ret(nowBlock, exprReg.type, exprReg));
+            lastRET = new ret(nowBlock, retType, exprReg);
+            nowBlock.addInst(lastRET);
         }
     }
 
@@ -456,18 +476,18 @@ public class IRBuilder implements ASTvisitor {
     @Override
     public void visit(stringExprNode it) {
         String res = it.value.substring(1, it.value.length() - 1);
-        res=res.replace("\\\\","\\")
-                .replace("\\n","\n")
-                .replace("\\t","\t")
-                .replace("\\\"","\"")
-                .replace("\\0","\0");
-        res=res+"\0";
+        res = res.replace("\\\\", "\\")
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                .replace("\\0", "\0");
+        res = res + "\0";
         IRType globalIRType = new arrayType(res.length(), new intType(8));
-        res=res.replace("\\","\\5C")
-                .replace("\n","\\0A")
-                .replace("\t","\\09")
-                .replace("\"","\\22")
-                .replace("\0","\\00");
+        res = res.replace("\\", "\\5C")
+                .replace("\n", "\\0A")
+                .replace("\t", "\\09")
+                .replace("\"", "\\22")
+                .replace("\0", "\\00");
         numString++;
         globalVariable nowVar = new globalVariable("str" + numString, globalIRType);
         Module.GlobalList.add(new global(nowVar, globalIRType, new stringConst(globalIRType, res)));
@@ -485,17 +505,32 @@ public class IRBuilder implements ASTvisitor {
 
     @Override
     public void visit(thisExprNode it) {
-        it.operand = nowClassPointer;
+        num++;
+        register nowReg = new register(new pointerType(nowClass), Integer.toString(num));
+        nowBlock.addInst(new load(nowBlock, nowReg, nowReg.type, nowClassPointer));
+        it.operand = nowReg;
     }
 
     @Override
     public void visit(idExprNode it) {
         IRType nowIRType = it.type.getIRType();
+        if (it.type instanceof util.type.arrayType) {
+            for (int i = 1; i <= ((util.type.arrayType) it.type).dim; ++i)
+                nowIRType = new pointerType(nowIRType);
+        }
+        if (nowIRType instanceof classType)
+            nowIRType = new pointerType(nowIRType);
         it.operand = regMap.get(it.id);
         if (it.operand == null)
             it.operand = globalMap.get(it.id);
         //class member
         if (it.operand == null) {
+            //load
+            num++;
+            register classReg = new register(new pointerType(nowClass), Integer.toString(num));
+            nowBlock.addInst(new load(nowBlock, classReg, classReg.type, nowClassPointer));
+
+            //getelementptr
             int pos = nowClass.nameList.indexOf(it.id);
 
             num++;
@@ -503,7 +538,7 @@ public class IRBuilder implements ASTvisitor {
             ArrayList<Operand> nowparaList = new ArrayList<>();
             nowparaList.add(new intConst(0));
             nowparaList.add(new intConst(pos));
-            nowBlock.addInst(new getelementptr(nowBlock, nowReg, new pointerType(nowClass), nowClassPointer, nowparaList));
+            nowBlock.addInst(new getelementptr(nowBlock, nowReg, new pointerType(nowClass), classReg, nowparaList));
 
             it.operand = nowReg;
         }
@@ -519,6 +554,12 @@ public class IRBuilder implements ASTvisitor {
     public void visit(funcExprNode it) {
         String funcId = "";
         IRType nowIRType = it.type.getIRType();
+        if (it.type instanceof util.type.arrayType) {
+            for (int i = 0; i < ((util.type.arrayType) it.type).dim; ++i)
+                nowIRType = new pointerType(nowIRType);
+        }
+        if (nowIRType instanceof classType)
+            nowIRType = new pointerType(nowIRType);
         ArrayList<Operand> paraList = new ArrayList<>();
 
         //String-Builtin
@@ -587,7 +628,15 @@ public class IRBuilder implements ASTvisitor {
 
             paraList.add(classReg);
         } else if (it.id instanceof idExprNode) {
-            funcId = ((idExprNode) it.id).id;
+            if (nowClass != null && classfuncList.contains(((idExprNode) it.id).id)) {
+                num++;
+                register classReg = new register(new pointerType(nowClass), Integer.toString(num));
+                nowBlock.addInst(new load(nowBlock, classReg, classReg.type, nowClassPointer));
+
+                funcId = nowClass.name + "_" + ((idExprNode) it.id).id;
+
+                paraList.add(classReg);
+            } else funcId = ((idExprNode) it.id).id;
         }
 
         for (exprNode x : it.exprList.exprList) {
@@ -670,7 +719,7 @@ public class IRBuilder implements ASTvisitor {
 
         ArrayList<Operand> nowparaList = new ArrayList<>();
         nowparaList.add(new intConst(0));
-        int pos = ((classType) classIRType).nameList.indexOf(it.name);
+        int pos = ((classType) classIRType).nameList.indexOf(it.id);
         IRType nowIRType = ((classType) classIRType).typeList.get(pos);
         nowparaList.add(new intConst(pos));
         num++;
@@ -794,30 +843,31 @@ public class IRBuilder implements ASTvisitor {
         //class
         if (it.exprList == null) {
             //get size
-            int size=0;
-            for(IRType x: ((classType) nowIRType).typeList){
-                if (x instanceof pointerType) size+=8;
+            int size = 0;
+            for (IRType x : ((classType) nowIRType).typeList) {
+                if (x instanceof pointerType) size += 8;
                 else if (x instanceof intType) {
-                    if (((intType) x).wide==32) size+=4;
+                    if (((intType) x).wide == 32) size += 4;
                     else size++;
-                };
+                }
+                ;
             }
 
             //malloc
             num++;
-            register mallocpointer=new register(new pointerType(new intType(8)),Integer.toString(num));
-            ArrayList<Operand> nowparaList=new ArrayList<>();
+            register mallocpointer = new register(new pointerType(new intType(8)), Integer.toString(num));
+            ArrayList<Operand> nowparaList = new ArrayList<>();
             nowparaList.add(new intConst(size));
-            nowBlock.addInst(new call(nowBlock,mallocpointer, mallocpointer.type,"_f_malloc",nowparaList));
+            nowBlock.addInst(new call(nowBlock, mallocpointer, mallocpointer.type, "_f_malloc", nowparaList));
 
             //bitcast
             num++;
-            register classpointer=new register(new pointerType(nowIRType),Integer.toString(num));
-            nowBlock.addInst(new bitcast(nowBlock,classpointer, mallocpointer.type, mallocpointer,classpointer.type));
+            register classpointer = new register(new pointerType(nowIRType), Integer.toString(num));
+            nowBlock.addInst(new bitcast(nowBlock, classpointer, mallocpointer.type, mallocpointer, classpointer.type));
 
-            it.operand=classpointer;
+            it.operand = classpointer;
 
-            return ;
+            return;
         }
 
         //null
@@ -1108,19 +1158,16 @@ public class IRBuilder implements ASTvisitor {
             it.expr1.accept(this);
             it.expr2.accept(this);
 
-            IRType nowIRType;
             Operand operand2;
             IRType expr2IRType = it.expr2.operand.type;
-            nowIRType = expr2IRType;
             if (it.expr2.operand.loadneed) {
                 IRType newIRType = ((pointerType) expr2IRType).type;
-                nowIRType = newIRType;
                 num++;
                 operand2 = new register(newIRType, Integer.toString(num));
                 nowBlock.addInst(new load(nowBlock, (register) operand2, newIRType, it.expr2.operand));
             } else operand2 = it.expr2.operand;
 
-            nowBlock.addInst(new store(nowBlock, nowIRType, operand2, it.expr1.operand));
+            nowBlock.addInst(new store(nowBlock, ((pointerType) it.expr1.operand.type).type, operand2, it.expr1.operand));
             it.operand = it.expr1.operand;
             return;
         }
@@ -1129,7 +1176,7 @@ public class IRBuilder implements ASTvisitor {
         it.expr1.accept(this);
         it.expr2.accept(this);
 
-        IRType nowIRType=it.type.getIRType();
+        IRType nowIRType = it.type.getIRType();
 
         Operand operand1;
         IRType expr1IRType = it.expr1.operand.type;

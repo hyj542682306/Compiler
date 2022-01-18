@@ -6,7 +6,7 @@ public class boolConst extends Operand {
     public boolean val;
 
     public boolConst(boolean _val) {
-        super(new intType(8));
+        super(new intType(1));
         val = _val;
     }
 
