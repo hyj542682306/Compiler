@@ -10,7 +10,7 @@ public class function {
     public ArrayList<basicblock> BlockList;
 
     public function() {
-        AllocaBlock = new basicblock("ALLOCA",this);
+        AllocaBlock = new basicblock("ALLOCA", this);
         BlockList = new ArrayList<>();
     }
 

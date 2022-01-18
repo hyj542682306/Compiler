@@ -28,7 +28,6 @@ public class IRBuilder implements ASTvisitor {
     public classType nowClass = null;
     public register nowClassPointer = null;
     public IRscope nowIRscope;
-//    public HashMap<String, register> regMap;
     public HashMap<String, globalVariable> globalMap;
     public ret lastRET = null;
     public IRType retType = null;
@@ -41,7 +40,6 @@ public class IRBuilder implements ASTvisitor {
         Module = _Module;
         globalMap = new HashMap<>();
         nowIRscope = new IRscope(null);
-//        regMap = new HashMap<>();
         initFunction = new function();
         initFunction.funcDefine = new define(new voidType(), "_INIT_");
         initBlock = new basicblock("L0", initFunction);
@@ -88,8 +86,6 @@ public class IRBuilder implements ASTvisitor {
 
 
         nowIRscope = new IRscope(nowIRscope);
-//        HashMap<String, register> tmpregMap = regMap;
-//        regMap.clear();
         num = numLabel = -1;
 
         nowFunction = new function();
@@ -145,8 +141,7 @@ public class IRBuilder implements ASTvisitor {
                 num++;
                 register tmpReg = new register(new pointerType(tmpIRType), Integer.toString(num));
                 nowBlock.addInst(new alloca(nowBlock, tmpReg, tmpIRType));
-                nowIRscope.put(x.id,tmpReg);
-//                regMap.put(x.id, tmpReg);
+                nowIRscope.put(x.id, tmpReg);
                 int lasId = num - it.paraList.size();
                 if (nowClass != null) lasId--;
                 nowBlock.addInst(new store(nowBlock, tmpIRType, new register(tmpIRType, Integer.toString(lasId)), tmpReg));
@@ -171,7 +166,6 @@ public class IRBuilder implements ASTvisitor {
 
         Module.FuncList.add(nowFunction);
         nowIRscope = nowIRscope.pIRscope;
-//        regMap = tmpregMap;
     }
 
     @Override
@@ -190,7 +184,7 @@ public class IRBuilder implements ASTvisitor {
                 ((classType) nowIRType).typeList.add(xIRType);
                 ((classType) nowIRType).nameList.add(x.id);
             }
-            if (it.struct!=null) ((classType) nowIRType).hasStruct=true;
+            if (it.struct != null) ((classType) nowIRType).hasStruct = true;
             Module.GlobalList.add(new global(nowIRType));
             return;
         }
@@ -254,8 +248,7 @@ public class IRBuilder implements ASTvisitor {
             register nowReg = new register(new pointerType(nowIRType), Integer.toString(num));
             //alloca
             nowBlock.addInst(new alloca(nowBlock, nowReg, nowIRType));
-            nowIRscope.put(it.id,nowReg);
-            //regMap.put(it.id, nowReg);
+            nowIRscope.put(it.id, nowReg);
 
             if (it.expr != null) {
                 it.expr.accept(this);
@@ -544,7 +537,6 @@ public class IRBuilder implements ASTvisitor {
             tmpIRscope = tmpIRscope.pIRscope;
         }
 
-//        it.operand = regMap.get(it.id);
         if (it.operand == null)
             it.operand = globalMap.get(it.id);
         //class member
@@ -892,10 +884,10 @@ public class IRBuilder implements ASTvisitor {
             it.operand = classpointer;
 
             //call
-            if (((classType) nowIRType).hasStruct){
+            if (((classType) nowIRType).hasStruct) {
                 nowparaList = new ArrayList<>();
                 nowparaList.add(classpointer);
-                nowBlock.addInst(new call(nowBlock,null,new voidType(),((classType) nowIRType).name+"_"+((classType) nowIRType).name,nowparaList));
+                nowBlock.addInst(new call(nowBlock, null, new voidType(), ((classType) nowIRType).name + "_" + ((classType) nowIRType).name, nowparaList));
             }
             return;
         }

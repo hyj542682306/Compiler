@@ -49,12 +49,12 @@ public class IRPrinter implements IRvisitor {
     @Override
     public void visit(function it) {
         visit(it.funcDefine);
-        for (basicblock x : it.BlockList){
+        for (basicblock x : it.BlockList) {
             for (Inst y : x.AllocaList)
                 it.AllocaBlock.addInst(y);
             x.AllocaList.clear();
         }
-        it.AllocaBlock.addInst(new br(it.AllocaBlock,it.BlockList.get(0)));
+        it.AllocaBlock.addInst(new br(it.AllocaBlock, it.BlockList.get(0)));
         it.AllocaBlock.accept(this);
         it.BlockList.forEach(x -> x.accept(this));
         file_print.println("}");
