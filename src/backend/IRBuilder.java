@@ -142,11 +142,12 @@ public class IRBuilder implements ASTvisitor {
         it.suite.accept(this);
         Global = tmpGlobal;
 
-        //void function can have no return
+        //void and main function can have no return
         if (nowBlock.terminator == null) {
-            structFunction = true;
-            nowBlock.terminator = new ret(nowBlock);
-            structFunction = false;
+            if (it.id.equals("main"))
+                nowBlock.terminator = new ret(nowBlock,new intType(32),new intConst(0));
+            else
+                nowBlock.terminator = new ret(nowBlock);
         }
         nowFunction.BlockList.add(nowBlock);
 
@@ -238,7 +239,7 @@ public class IRBuilder implements ASTvisitor {
                     exprReg = new register(newIRType, Integer.toString(num));
                     nowBlock.addInst(new load(nowBlock, (register) exprReg, newIRType, it.expr.operand));
                 } else exprReg = it.expr.operand;
-                nowBlock.addInst(new store(nowBlock, valueIRType, exprReg, nowReg));
+                nowBlock.addInst(new store(nowBlock, nowIRType, exprReg, nowReg));
             }
         }
     }
@@ -455,7 +456,18 @@ public class IRBuilder implements ASTvisitor {
     @Override
     public void visit(stringExprNode it) {
         String res = it.value.substring(1, it.value.length() - 1);
+        res=res.replace("\\\\","\\")
+                .replace("\\n","\n")
+                .replace("\\t","\t")
+                .replace("\\\"","\"")
+                .replace("\\0","\0");
+        res=res+"\0";
         IRType globalIRType = new arrayType(res.length(), new intType(8));
+        res=res.replace("\\","\\5C")
+                .replace("\n","\\0A")
+                .replace("\t","\\09")
+                .replace("\"","\\22")
+                .replace("\0","\\00");
         numString++;
         globalVariable nowVar = new globalVariable("str" + numString, globalIRType);
         Module.GlobalList.add(new global(nowVar, globalIRType, new stringConst(globalIRType, res)));
@@ -479,9 +491,9 @@ public class IRBuilder implements ASTvisitor {
     @Override
     public void visit(idExprNode it) {
         IRType nowIRType = it.type.getIRType();
-        it.operand = globalMap.get(it.id);
+        it.operand = regMap.get(it.id);
         if (it.operand == null)
-            it.operand = regMap.get(it.id);
+            it.operand = globalMap.get(it.id);
         //class member
         if (it.operand == null) {
             int pos = nowClass.nameList.indexOf(it.id);
@@ -1023,7 +1035,7 @@ public class IRBuilder implements ASTvisitor {
 
             if (it.op.equals("||")) {
                 num++;
-                register ctrl = new register(nowIRType, Integer.toString(num));
+                register ctrl = new register(new pointerType(nowIRType), Integer.toString(num));
                 nowBlock.addInst(new alloca(nowBlock, ctrl, nowIRType));
                 nowBlock.addInst(new br(nowBlock, operand1, ShortBlock, LongBlock));
                 nowFunction.BlockList.add(nowBlock);
@@ -1057,7 +1069,7 @@ public class IRBuilder implements ASTvisitor {
                 globalEndBlock = tmpEndBlock;
             } else {
                 num++;
-                register ctrl = new register(nowIRType, Integer.toString(num));
+                register ctrl = new register(new pointerType(nowIRType), Integer.toString(num));
                 nowBlock.addInst(new alloca(nowBlock, ctrl, nowIRType));
                 nowBlock.addInst(new br(nowBlock, operand1, LongBlock, ShortBlock));
                 nowFunction.BlockList.add(nowBlock);
@@ -1117,13 +1129,12 @@ public class IRBuilder implements ASTvisitor {
         it.expr1.accept(this);
         it.expr2.accept(this);
 
-        IRType nowIRType;
+        IRType nowIRType=it.type.getIRType();
+
         Operand operand1;
         IRType expr1IRType = it.expr1.operand.type;
-        nowIRType = expr1IRType;
         if (it.expr1.operand.loadneed) {
             IRType newIRType = ((pointerType) expr1IRType).type;
-            nowIRType = newIRType;
             num++;
             operand1 = new register(newIRType, Integer.toString(num));
             nowBlock.addInst(new load(nowBlock, (register) operand1, newIRType, it.expr1.operand));
@@ -1249,7 +1260,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "add", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "add", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1258,7 +1269,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "sub", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "sub", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1267,7 +1278,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "mul", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "mul", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1276,7 +1287,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "sdiv", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "sdiv", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1285,7 +1296,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "srem", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "srem", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1294,7 +1305,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "shl", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "shl", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1303,7 +1314,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "ashr", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "ashr", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1312,7 +1323,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "slt", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "slt", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1321,7 +1332,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "sle", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "sle", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1330,7 +1341,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "sgt", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "sgt", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1339,7 +1350,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "sge", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "sge", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1348,7 +1359,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "ne", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "ne", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1357,7 +1368,7 @@ public class IRBuilder implements ASTvisitor {
                 //icmp
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new icmp(nowBlock, newReg, "eq", nowIRType, operand1, operand2));
+                nowBlock.addInst(new icmp(nowBlock, newReg, "eq", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1366,13 +1377,13 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "xor", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "xor", operand1.type, operand1, operand2));
             }
             case "|" -> {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "or", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "or", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;
@@ -1381,7 +1392,7 @@ public class IRBuilder implements ASTvisitor {
                 //binary
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
-                nowBlock.addInst(new binary(nowBlock, newReg, "and", nowIRType, operand1, operand2));
+                nowBlock.addInst(new binary(nowBlock, newReg, "and", operand1.type, operand1, operand2));
 
                 //binaryExpr's operand
                 it.operand = newReg;

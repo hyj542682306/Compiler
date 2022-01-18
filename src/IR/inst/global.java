@@ -41,7 +41,7 @@ public class global extends Inst {
             res = res + " }";
             return res;
         } else if (value instanceof stringConst)
-            return var.toString() + " = constant [" + Integer.toString(((stringConst) value).str.length()) + " x i8] c\"" + value.toString() + "\"";
+            return var.toString() + " = constant " + ty.toString() + " c\"" + value.toString() + "\"";
         else
             return var.toString() + " = global " + ty.toString() + " " + value.toString();
     }
