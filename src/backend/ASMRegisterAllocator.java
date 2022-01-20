@@ -64,12 +64,12 @@ public class ASMRegisterAllocator {
                 it = y.instList.listIterator(0);
                 while (it.hasNext()) {
                     Inst x = it.next();
-                    if (x.rd instanceof virtualRegister)
-                        x.rd = allocate((virtualRegister) x.rd, t3, false);
                     if (x.rs1 instanceof virtualRegister)
-                        x.rs1 = allocate((virtualRegister) x.rs1, t4, true);
+                        x.rs1 = allocate((virtualRegister) x.rs1, t3, true);
                     if (x.rs2 instanceof virtualRegister)
-                        x.rs2 = allocate((virtualRegister) x.rs2, t5, true);
+                        x.rs2 = allocate((virtualRegister) x.rs2, t4, true);
+                    if (x.rd instanceof virtualRegister)
+                        x.rd = allocate((virtualRegister) x.rd, t5, false);
                 }
             }
         }
