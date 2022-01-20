@@ -918,7 +918,7 @@ public class IRBuilder implements ASTvisitor {
         //mul
         num++;
         register mulReg = new register(new intType(32), Integer.toString(num));
-        int singleSize = 0;
+        int singleSize = 4;
         if (dim == 1) {
             if (it.typeN.type.equals("int")) singleSize = 4;
             else if (it.typeN.type.equals("bool")) singleSize = 1;
@@ -1013,7 +1013,7 @@ public class IRBuilder implements ASTvisitor {
                 //mul
                 num++;
                 mulReg = new register(new intType(32), Integer.toString(num));
-                singleSize = 0;
+                singleSize = 4;
                 if (dim - i == 1) {
                     if (it.typeN.type.equals("int")) singleSize = 4;
                     else if (it.typeN.type.equals("bool")) singleSize = 1;

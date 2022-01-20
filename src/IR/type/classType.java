@@ -18,4 +18,13 @@ public class classType extends IRType {
     public String toString() {
         return "%class." + name;
     }
+
+    @Override
+    public int getSize() {
+        int res=0;
+        for (IRType x : typeList) {
+            res += x.getSize();
+        }
+        return res;
+    }
 }

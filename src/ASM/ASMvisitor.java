@@ -26,4 +26,8 @@ public interface ASMvisitor {
     void visit(ASMfunction it);
 
     void visit(ASMblock it);
+
+    void visit(sw it);
+
+    void visit(lw it);
 }

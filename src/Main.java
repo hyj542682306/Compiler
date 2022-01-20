@@ -1,5 +1,7 @@
+import ASM.ASMmodule;
 import AST.*;
 import IR.module;
+import backend.ASMBuilder;
 import backend.IRBuilder;
 import backend.IRPrinter;
 import frontend.*;
@@ -49,6 +51,9 @@ public class Main {
             new IRBuilder(globalScope, Module).visit(ASTRoot);
             IRPrinter myIR = new IRPrinter("myllvm.ll");
             myIR.visit(Module);
+
+            ASMmodule ASM = new ASMmodule();
+            new ASMBuilder(ASM).visit(Module);
         } catch (Error error) {
             System.err.println(error.toString());
             throw new RuntimeException();

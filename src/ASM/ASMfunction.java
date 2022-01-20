@@ -17,8 +17,8 @@ public class ASMfunction {
         blockList = new ArrayList<>();
     }
 
-    public void alloca(virtualRegister reg, int size) {
-        offset += size;
+    public void alloca(virtualRegister reg) {
+        offset += reg.size;
         offMap.put(reg, offset);
     }
 

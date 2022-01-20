@@ -14,4 +14,9 @@ public class arrayType extends IRType {
     public String toString() {
         return "[" + Integer.toString(arrayDim) + " x " + type.toString() + "]";
     }
+
+    @Override
+    public int getSize() {
+        return arrayDim * type.getSize();
+    }
 }

@@ -11,4 +11,6 @@ public abstract class IRType {
     }
 
     public abstract String toString();
+
+    public abstract int getSize();
 }
