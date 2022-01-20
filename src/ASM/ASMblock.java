@@ -3,14 +3,15 @@ package ASM;
 import ASM.inst.Inst;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class ASMblock {
     public String name;
-    public ArrayList<Inst> instList;
+    public LinkedList<Inst> instList;
 
     public ASMblock(String _name) {
         name = _name;
-        instList = new ArrayList<>();
+        instList = new LinkedList<>();
     }
 
     public void addInst(Inst x) {

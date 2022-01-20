@@ -270,7 +270,8 @@ public class ASMBuilder implements IRvisitor {
             }
             //array
             else {
-                nowBlock.addInst(new arithmetic("mul", EX, getReg(it.IdxList.get(0)), null, new immediate(4)));
+                nowBlock.addInst(new li(EX,new immediate(4)));
+                nowBlock.addInst(new arithmetic("mul", EX, getReg(it.IdxList.get(0)), EX, null));
                 nowBlock.addInst(new arithmetic("add", rd, getReg(it.value), EX, null));
             }
         }

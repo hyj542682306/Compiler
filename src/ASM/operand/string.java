@@ -9,7 +9,7 @@ public class string extends ASMOperand {
         str = _str.replace("\\5C", "\\\\")
                 .replace("\\0A", "\\n")
                 .replace("\\22", "\\\"")
-                .replace("\\00", "\0");
+                .replace("\\00", "");
         size = str.length();
     }
 
