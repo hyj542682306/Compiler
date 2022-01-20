@@ -919,12 +919,12 @@ public class IRBuilder implements ASTvisitor {
         num++;
         register mulReg = new register(new intType(32), Integer.toString(num));
         int singleSize = 4;
-        if (dim == 1) {
-            if (it.typeN.type.equals("int")) singleSize = 4;
-            else if (it.typeN.type.equals("bool")) singleSize = 1;
-            else if (it.typeN.type.equals("string")) singleSize = 8;
-            else singleSize = 8;
-        } else singleSize = 8;
+//        if (dim == 1) {
+//            if (it.typeN.type.equals("int")) singleSize = 4;
+//            else if (it.typeN.type.equals("bool")) singleSize = 1;
+//            else if (it.typeN.type.equals("string")) singleSize = 8;
+//            else singleSize = 8;
+//        } else singleSize = 8;
         nowBlock.addInst(new binary(nowBlock, mulReg, "mul", new intType(32), sizeReg, new intConst(singleSize)));
 
         //sum
@@ -1014,12 +1014,12 @@ public class IRBuilder implements ASTvisitor {
                 num++;
                 mulReg = new register(new intType(32), Integer.toString(num));
                 singleSize = 4;
-                if (dim - i == 1) {
-                    if (it.typeN.type.equals("int")) singleSize = 4;
-                    else if (it.typeN.type.equals("bool")) singleSize = 1;
-                    else if (it.typeN.type.equals("string")) singleSize = 8;
-                    else singleSize = 8;
-                } else singleSize = 8;
+//                if (dim - i == 1) {
+//                    if (it.typeN.type.equals("int")) singleSize = 4;
+//                    else if (it.typeN.type.equals("bool")) singleSize = 1;
+//                    else if (it.typeN.type.equals("string")) singleSize = 8;
+//                    else singleSize = 8;
+//                } else singleSize = 8;
                 nowBlock.addInst(new binary(nowBlock, mulReg, "mul", new intType(32), sizeReg, new intConst(singleSize)));
 
                 //sum

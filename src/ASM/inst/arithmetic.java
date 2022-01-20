@@ -17,9 +17,9 @@ public class arithmetic extends Inst {
     @Override
     public String toString() {
         if (ImmArith)
-            return op + "\t" + rd + ", " + rs1 + ", " + imm;
+            return op + "i\t" + rd + ", " + rs1 + ", " + imm;
         else
-            return op + "i\t" + rd + ", " + rs1 + ", " + rs2;
+            return op + "\t" + rd + ", " + rs1 + ", " + rs2;
     }
 
     @Override

@@ -1,9 +1,7 @@
 import ASM.ASMmodule;
 import AST.*;
 import IR.module;
-import backend.ASMBuilder;
-import backend.IRBuilder;
-import backend.IRPrinter;
+import backend.*;
 import frontend.*;
 import util.Mx_liteErrorListener;
 import util.error.semanticError;
@@ -54,6 +52,11 @@ public class Main {
 
             ASMmodule ASM = new ASMmodule();
             new ASMBuilder(ASM).visit(Module);
+
+            new ASMRegisterAllocator(ASM).RegisterAllocate();
+
+            ASMPrinter result = new ASMPrinter("output.s");
+            result.visit(ASM);
         } catch (Error error) {
             System.err.println(error.toString());
             throw new RuntimeException();

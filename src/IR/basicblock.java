@@ -15,7 +15,6 @@ public class basicblock {
         infunction = _infunction;
         AllocaList = new ArrayList<>();
         InstList = new ArrayList<>();
-        infunction = null;
     }
 
     public void addInst(Inst _inst) {

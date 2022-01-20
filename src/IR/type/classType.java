@@ -21,7 +21,7 @@ public class classType extends IRType {
 
     @Override
     public int getSize() {
-        int res=0;
+        int res = 0;
         for (IRType x : typeList) {
             res += x.getSize();
         }

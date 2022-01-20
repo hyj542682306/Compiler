@@ -9,7 +9,7 @@ public class lw extends Inst {
 
     public lw(ASMregister _rd, ASMregister _rs1, immediate _imm, String _global) {
         super(_rd, _rs1, null, _imm);
-        global=_global;
+        global = _global;
     }
 
     @Override
@@ -17,7 +17,7 @@ public class lw extends Inst {
         if (global == null)
             return "lw\t" + rd + ", " + imm + "(" + rs1 + ")";
         else
-            return "lw\t"+rd+", "+global;
+            return "lw\t" + rd + ", " + global;
     }
 
     @Override

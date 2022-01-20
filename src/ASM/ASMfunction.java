@@ -15,6 +15,7 @@ public class ASMfunction {
         name = _name;
         offset = 8;
         blockList = new ArrayList<>();
+        offMap = new HashMap<>();
     }
 
     public void alloca(virtualRegister reg) {
