@@ -21,6 +21,15 @@ public class Main {
 
         String name = "test.mx";
         InputStream input = System.in;
+        boolean tag = false;
+        if (args.length > 0){
+            for (String arg : args) {
+                switch (arg) {
+                    case "-semantic" -> tag = false;
+                    case "-codegen" -> tag = true;
+                }
+            }
+        }
 //        FileInputStream input = new FileInputStream(name);
         try {
             //Semantic - lexer, paser, AST
@@ -43,6 +52,8 @@ public class Main {
             new TypeCollector(globalScope).visit(ASTRoot);
             globalScope.varMap.clear();
             new SemanticChecker(globalScope).visit(ASTRoot);
+
+            if (!tag)return ;
 
             //Codegen - IR, ASM
             module Module = new module();
