@@ -23,7 +23,7 @@ public class ASMBuilder implements IRvisitor {
     public ASMblock nowBlock;
     public physicalRegister zero, ra, sp, s0, a0;
     public HashMap<String, ASMregister> regMap;
-    int extraNum=-1;
+    int extraNum = -1;
 
     public ASMBuilder(ASMmodule _Module) {
         Module = _Module;
@@ -39,19 +39,20 @@ public class ASMBuilder implements IRvisitor {
     public ASMregister getReg(Operand operand) {
         virtualRegister res = null;
         if (operand instanceof register) {
-            if (regMap.containsKey(nowFunction.name+"_"+((register) operand).name)) return regMap.get(nowFunction.name+"_"+((register) operand).name);
+            if (regMap.containsKey(nowFunction.name + "_" + ((register) operand).name))
+                return regMap.get(nowFunction.name + "_" + ((register) operand).name);
             else {
                 res = new virtualRegister(((register) operand).name, 4);
-                regMap.put(nowFunction.name+"_"+((register) operand).name, res);
+                regMap.put(nowFunction.name + "_" + ((register) operand).name, res);
             }
         } else if (operand instanceof globalVariable) {
             extraNum++;
-            res = new virtualRegister("_EX_"+extraNum,4);
+            res = new virtualRegister("_EX_" + extraNum, 4);
             nowBlock.addInst(new la(res, ((globalVariable) operand).name));
             return res;
         } else {
             extraNum++;
-            res = new virtualRegister("_EX_"+extraNum,4);
+            res = new virtualRegister("_EX_" + extraNum, 4);
 
             int value = 0;
             if (operand instanceof intConst) value = ((intConst) operand).val;
@@ -97,7 +98,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(alloca it) {
         virtualRegister alcReg = new virtualRegister(it.result.name, 4);
-        regMap.put(nowFunction.name+"_"+it.result.name, alcReg);
+        regMap.put(nowFunction.name + "_" + it.result.name, alcReg);
         nowFunction.alloca(alcReg);
     }
 
@@ -161,13 +162,13 @@ public class ASMBuilder implements IRvisitor {
         switch (it.cond) {
             case "eq" -> {
                 ++extraNum;
-                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
+                virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
                 nowBlock.addInst(new arithmetic("xor", EX, rs1, rs2, null));
                 nowBlock.addInst(new compare("seqz", rd, EX, null));
             }
             case "ne" -> {
                 ++extraNum;
-                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
+                virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
                 nowBlock.addInst(new arithmetic("xor", EX, rs1, rs2, null));
                 nowBlock.addInst(new compare("snez", rd, EX, null));
             }
@@ -187,7 +188,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(load it) {
         virtualRegister rd = new virtualRegister(it.result.name, 4);
-        regMap.put(nowFunction.name+"_"+it.result.name, rd);
+        regMap.put(nowFunction.name + "_" + it.result.name, rd);
         if (it.pointer instanceof globalVariable) {
             nowBlock.addInst(new lw(rd, null, null, ((globalVariable) it.pointer).name));
         } else {
@@ -198,7 +199,7 @@ public class ASMBuilder implements IRvisitor {
                     nowBlock.addInst(new lw(rd, s0, new immediate(offset), null));
                 else {
                     ++extraNum;
-                    virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
+                    virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
                     nowBlock.addInst(new li(EX, new immediate(offset)));
                     nowBlock.addInst(new arithmetic("add", EX, EX, s0, null));
                     nowBlock.addInst(new sw(EX, rd, new immediate(0)));
@@ -212,14 +213,14 @@ public class ASMBuilder implements IRvisitor {
     public void visit(IR.inst.ret it) {
         if (it.ty instanceof voidType) nowBlock.addInst(new mv(a0, zero));
         else nowBlock.addInst(new mv(a0, getReg(it.value)));
-        nowBlock.addInst(new j("."+nowFunction.name+"_"+"RETURN"));
+        nowBlock.addInst(new j("." + nowFunction.name + "_" + "RETURN"));
     }
 
     @Override
     public void visit(store it) {
         if (it.pointer instanceof globalVariable) {
             ++extraNum;
-            virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
+            virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
             nowBlock.addInst(new la(EX, ((globalVariable) it.pointer).name));
             nowBlock.addInst(new sw(EX, getReg(it.value), new immediate(0)));
         } else {
@@ -230,7 +231,7 @@ public class ASMBuilder implements IRvisitor {
                     nowBlock.addInst(new sw(s0, rs2, new immediate(offset)));
                 else {
                     ++extraNum;
-                    virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
+                    virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
                     nowBlock.addInst(new li(EX, new immediate(offset)));
                     nowBlock.addInst(new arithmetic("add", EX, EX, s0, null));
                     nowBlock.addInst(new sw(EX, rs1, new immediate(0)));
@@ -264,13 +265,13 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(bitcast it) {
-        regMap.put(nowFunction.name+"_"+it.result.name,getReg(it.value));
+        regMap.put(nowFunction.name + "_" + it.result.name, getReg(it.value));
     }
 
     @Override
     public void visit(getelementptr it) {
         if (it.value instanceof globalVariable)
-            regMap.put(nowFunction.name+"_"+it.result.name,getReg(it.value));
+            regMap.put(nowFunction.name + "_" + it.result.name, getReg(it.value));
         else {
             ASMregister rd = getReg(it.result);
 
@@ -282,8 +283,8 @@ public class ASMBuilder implements IRvisitor {
             //array
             else {
                 ++extraNum;
-                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
-                nowBlock.addInst(new li(EX,new immediate(4)));
+                virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
+                nowBlock.addInst(new li(EX, new immediate(4)));
                 nowBlock.addInst(new arithmetic("mul", EX, getReg(it.IdxList.get(0)), EX, null));
                 nowBlock.addInst(new arithmetic("add", rd, getReg(it.value), EX, null));
             }

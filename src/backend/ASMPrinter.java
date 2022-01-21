@@ -14,7 +14,7 @@ import java.io.PrintWriter;
 
 public class ASMPrinter implements ASMvisitor {
     public PrintWriter file_print;
-    public physicalRegister ra,sp,s0,s2;
+    public physicalRegister ra, sp, s0, s2;
     private final String tab = "   ";
 
     public ASMPrinter(String path) throws FileNotFoundException {
@@ -97,41 +97,40 @@ public class ASMPrinter implements ASMvisitor {
         int off = it.offset;
 
         ASMblock firstBlock = it.blockList.get(0);
-        ASMblock lastBlock = it.blockList.get(it.blockList.size()-1);
-        if (-2024 <= off && off <= 2023){
+        ASMblock lastBlock = it.blockList.get(it.blockList.size() - 1);
+        if (-2024 <= off && off <= 2023) {
             //first
-            firstBlock.instList.addFirst(new arithmetic("add",s0,sp,null,new immediate(off+12)));
-            firstBlock.instList.addFirst(new sw(sp,s0,new immediate(off+4)));
-            firstBlock.instList.addFirst(new sw(sp,ra,new immediate(off+8)));
-            firstBlock.instList.addFirst(new arithmetic("add",sp, sp, null, new immediate(-off-12)));
+            firstBlock.instList.addFirst(new arithmetic("add", s0, sp, null, new immediate(off + 12)));
+            firstBlock.instList.addFirst(new sw(sp, s0, new immediate(off + 4)));
+            firstBlock.instList.addFirst(new sw(sp, ra, new immediate(off + 8)));
+            firstBlock.instList.addFirst(new arithmetic("add", sp, sp, null, new immediate(-off - 12)));
 
             //last
-            lastBlock.addInst(new lw(s0,sp,new immediate(off+4),null));
-            lastBlock.addInst(new lw(ra,sp,new immediate(off+8),null));
-            lastBlock.addInst(new arithmetic("add", sp, sp, null, new immediate(off+12)));
-        }
-        else {
+            lastBlock.addInst(new lw(s0, sp, new immediate(off + 4), null));
+            lastBlock.addInst(new lw(ra, sp, new immediate(off + 8), null));
+            lastBlock.addInst(new arithmetic("add", sp, sp, null, new immediate(off + 12)));
+        } else {
             //first
-            firstBlock.instList.addFirst(new arithmetic("add",s0,sp,s2,null));
-            firstBlock.instList.addFirst(new li(s2, new immediate(off+12)));
+            firstBlock.instList.addFirst(new arithmetic("add", s0, sp, s2, null));
+            firstBlock.instList.addFirst(new li(s2, new immediate(off + 12)));
             firstBlock.instList.addFirst(new sw(s2, s0, new immediate(0)));
             firstBlock.instList.addFirst(new arithmetic("add", s2, s2, sp, null));
-            firstBlock.instList.addFirst(new li(s2, new immediate(off+4)));
-            firstBlock.instList.addFirst(new sw(s2,ra, new immediate(0)));
-            firstBlock.instList.addFirst(new arithmetic("add",s2,s2,sp,null));
-            firstBlock.instList.addFirst(new li(s2, new immediate(off+8)));
-            firstBlock.instList.addFirst(new arithmetic("add",sp,sp,s2,null));
-            firstBlock.instList.addFirst(new li(s2, new immediate(-off-12)));
+            firstBlock.instList.addFirst(new li(s2, new immediate(off + 4)));
+            firstBlock.instList.addFirst(new sw(s2, ra, new immediate(0)));
+            firstBlock.instList.addFirst(new arithmetic("add", s2, s2, sp, null));
+            firstBlock.instList.addFirst(new li(s2, new immediate(off + 8)));
+            firstBlock.instList.addFirst(new arithmetic("add", sp, sp, s2, null));
+            firstBlock.instList.addFirst(new li(s2, new immediate(-off - 12)));
 
             //last
-            lastBlock.addInst(new li(s2,new immediate(off+4)));
-            lastBlock.addInst(new arithmetic("add",s2,s2,sp,null));
-            lastBlock.addInst(new lw(s0,s2,new immediate(0),null));
-            lastBlock.addInst(new li(s2, new immediate(off+8)));
-            lastBlock.addInst(new arithmetic("add",s2,s2,sp,null));
-            lastBlock.addInst(new lw(ra,s2,new immediate(0),null));
-            lastBlock.addInst(new li(s2,new immediate(off+12)));
-            lastBlock.addInst(new arithmetic("add",sp,sp,s2,null));
+            lastBlock.addInst(new li(s2, new immediate(off + 4)));
+            lastBlock.addInst(new arithmetic("add", s2, s2, sp, null));
+            lastBlock.addInst(new lw(s0, s2, new immediate(0), null));
+            lastBlock.addInst(new li(s2, new immediate(off + 8)));
+            lastBlock.addInst(new arithmetic("add", s2, s2, sp, null));
+            lastBlock.addInst(new lw(ra, s2, new immediate(0), null));
+            lastBlock.addInst(new li(s2, new immediate(off + 12)));
+            lastBlock.addInst(new arithmetic("add", sp, sp, s2, null));
         }
 
         lastBlock.addInst(new ret());
