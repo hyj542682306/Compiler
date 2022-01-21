@@ -22,8 +22,8 @@ public class ASMBuilder implements IRvisitor {
     public ASMfunction nowFunction;
     public ASMblock nowBlock;
     public physicalRegister zero, ra, sp, s0, a0;
-    public virtualRegister EX;
     public HashMap<Operand, ASMregister> regMap;
+    int extraNum=-1;
 
     public ASMBuilder(ASMmodule _Module) {
         Module = _Module;
@@ -33,7 +33,6 @@ public class ASMBuilder implements IRvisitor {
         s0 = _Module.phyRegList.get(8);
         a0 = _Module.phyRegList.get(10);
         regMap = new HashMap<>();
-        EX = new virtualRegister("_EX_", 4);
     }
 
     //virtual register
@@ -46,10 +45,13 @@ public class ASMBuilder implements IRvisitor {
                 regMap.put(operand, res);
             }
         } else if (operand instanceof globalVariable) {
-            nowBlock.addInst(new la(EX, ((globalVariable) operand).name));
-            return EX;
+            extraNum++;
+            res = new virtualRegister("_EX_"+extraNum,4);
+            nowBlock.addInst(new la(res, ((globalVariable) operand).name));
+            return res;
         } else {
-            res = EX;
+            extraNum++;
+            res = new virtualRegister("_EX_"+extraNum,4);
 
             int value = 0;
             if (operand instanceof intConst) value = ((intConst) operand).val;
@@ -156,10 +158,14 @@ public class ASMBuilder implements IRvisitor {
 
         switch (it.cond) {
             case "eq" -> {
+                ++extraNum;
+                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
                 nowBlock.addInst(new arithmetic("xor", EX, rs1, rs2, null));
                 nowBlock.addInst(new compare("seqz", rd, EX, null));
             }
             case "ne" -> {
+                ++extraNum;
+                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
                 nowBlock.addInst(new arithmetic("xor", EX, rs1, rs2, null));
                 nowBlock.addInst(new compare("snez", rd, EX, null));
             }
@@ -189,6 +195,8 @@ public class ASMBuilder implements IRvisitor {
                 if (-2048 <= offset && offset <= 2047)
                     nowBlock.addInst(new lw(rd, s0, new immediate(offset), null));
                 else {
+                    ++extraNum;
+                    virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
                     nowBlock.addInst(new li(EX, new immediate(offset)));
                     nowBlock.addInst(new arithmetic("add", EX, EX, s0, null));
                     nowBlock.addInst(new sw(EX, rd, new immediate(0)));
@@ -207,6 +215,8 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(store it) {
         if (it.pointer instanceof globalVariable) {
+            ++extraNum;
+            virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
             nowBlock.addInst(new la(EX, ((globalVariable) it.pointer).name));
             nowBlock.addInst(new sw(EX, getReg(it.value), new immediate(0)));
         } else {
@@ -216,6 +226,8 @@ public class ASMBuilder implements IRvisitor {
                 if (-2048 <= offset && offset <= 2047)
                     nowBlock.addInst(new sw(s0, rs2, new immediate(offset)));
                 else {
+                    ++extraNum;
+                    virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
                     nowBlock.addInst(new li(EX, new immediate(offset)));
                     nowBlock.addInst(new arithmetic("add", EX, EX, s0, null));
                     nowBlock.addInst(new sw(EX, rs1, new immediate(0)));
@@ -234,7 +246,7 @@ public class ASMBuilder implements IRvisitor {
         }
         for (int i = 8; i < it.paraList.size(); ++i) {
             ASMregister tmpReg = getReg(it.paraList.get(i));
-            nowBlock.addInst(new sw(tmpReg, sp, new immediate((i - 8) * 4)));
+            nowBlock.addInst(new sw(sp, tmpReg, new immediate((i - 8) * 4)));
         }
 
         //call
@@ -243,7 +255,7 @@ public class ASMBuilder implements IRvisitor {
         //deal with the return values
         if (!(it.ty instanceof voidType)) {
             ASMregister returnReg = getReg(it.result);
-            nowBlock.addInst(new mv(a0, returnReg));
+            nowBlock.addInst(new mv(returnReg, a0));
         }
     }
 
@@ -255,7 +267,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(getelementptr it) {
         if (it.value instanceof globalVariable)
-            getReg(it.value);
+            regMap.put(it.result,getReg(it.value));
         else {
             ASMregister rd = getReg(it.result);
 
@@ -266,6 +278,8 @@ public class ASMBuilder implements IRvisitor {
             }
             //array
             else {
+                ++extraNum;
+                virtualRegister EX = new virtualRegister("_EX_"+extraNum,4);
                 nowBlock.addInst(new li(EX,new immediate(4)));
                 nowBlock.addInst(new arithmetic("mul", EX, getReg(it.IdxList.get(0)), EX, null));
                 nowBlock.addInst(new arithmetic("add", rd, getReg(it.value), EX, null));
