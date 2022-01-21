@@ -39,10 +39,10 @@ public class ASMBuilder implements IRvisitor {
     public ASMregister getReg(Operand operand) {
         virtualRegister res = null;
         if (operand instanceof register) {
-            if (regMap.containsKey(((register) operand).name)) return regMap.get(((register) operand).name);
+            if (regMap.containsKey(nowFunction.name+"_"+((register) operand).name)) return regMap.get(nowFunction.name+"_"+((register) operand).name);
             else {
                 res = new virtualRegister(((register) operand).name, 4);
-                regMap.put(((register) operand).name, res);
+                regMap.put(nowFunction.name+"_"+((register) operand).name, res);
             }
         } else if (operand instanceof globalVariable) {
             extraNum++;
@@ -97,7 +97,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(alloca it) {
         virtualRegister alcReg = new virtualRegister(it.result.name, 4);
-        regMap.put(it.result.name, alcReg);
+        regMap.put(nowFunction.name+"_"+it.result.name, alcReg);
         nowFunction.alloca(alcReg);
     }
 
@@ -187,7 +187,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(load it) {
         virtualRegister rd = new virtualRegister(it.result.name, 4);
-        regMap.put(it.result.name, rd);
+        regMap.put(nowFunction.name+"_"+it.result.name, rd);
         if (it.pointer instanceof globalVariable) {
             nowBlock.addInst(new lw(rd, null, null, ((globalVariable) it.pointer).name));
         } else {
@@ -264,13 +264,13 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(bitcast it) {
-        regMap.put(it.result.name,getReg(it.value));
+        regMap.put(nowFunction.name+"_"+it.result.name,getReg(it.value));
     }
 
     @Override
     public void visit(getelementptr it) {
         if (it.value instanceof globalVariable)
-            regMap.put(it.result.name,getReg(it.value));
+            regMap.put(nowFunction.name+"_"+it.result.name,getReg(it.value));
         else {
             ASMregister rd = getReg(it.result);
 
