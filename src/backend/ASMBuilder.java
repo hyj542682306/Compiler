@@ -22,7 +22,7 @@ public class ASMBuilder implements IRvisitor {
     public ASMfunction nowFunction;
     public ASMblock nowBlock;
     public physicalRegister zero, ra, sp, s0, a0;
-    public HashMap<Operand, ASMregister> regMap;
+    public HashMap<String, ASMregister> regMap;
     int extraNum=-1;
 
     public ASMBuilder(ASMmodule _Module) {
@@ -39,10 +39,10 @@ public class ASMBuilder implements IRvisitor {
     public ASMregister getReg(Operand operand) {
         virtualRegister res = null;
         if (operand instanceof register) {
-            if (regMap.containsKey(operand)) return regMap.get(operand);
+            if (regMap.containsKey(((register) operand).name)) return regMap.get(((register) operand).name);
             else {
                 res = new virtualRegister(((register) operand).name, 4);
-                regMap.put(operand, res);
+                regMap.put(((register) operand).name, res);
             }
         } else if (operand instanceof globalVariable) {
             extraNum++;
@@ -81,6 +81,8 @@ public class ASMBuilder implements IRvisitor {
         nowFunction.blockList.add(nowBlock);
         it.AllocaBlock.AllocaList.forEach(x -> x.accept(this));
         it.BlockList.forEach(x -> x.accept(this));
+        nowBlock = new ASMblock("." + it.funcDefine.name + "_RETURN");
+        nowFunction.blockList.add(nowBlock);
         Module.funcList.add(nowFunction);
     }
 
@@ -95,7 +97,7 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(alloca it) {
         virtualRegister alcReg = new virtualRegister(it.result.name, 4);
-        regMap.put(it.result, alcReg);
+        regMap.put(it.result.name, alcReg);
         nowFunction.alloca(alcReg);
     }
 
@@ -185,13 +187,13 @@ public class ASMBuilder implements IRvisitor {
     @Override
     public void visit(load it) {
         virtualRegister rd = new virtualRegister(it.result.name, 4);
-        regMap.put(it.result, rd);
+        regMap.put(it.result.name, rd);
         if (it.pointer instanceof globalVariable) {
             nowBlock.addInst(new lw(rd, null, null, ((globalVariable) it.pointer).name));
         } else {
             ASMregister rs1 = getReg(it.pointer);
-            if (nowFunction.offMap.containsKey(rs1)) {
-                int offset = -nowFunction.offMap.get(rs1);
+            if (nowFunction.offMap.containsKey(rs1.name)) {
+                int offset = -nowFunction.offMap.get(rs1.name);
                 if (-2048 <= offset && offset <= 2047)
                     nowBlock.addInst(new lw(rd, s0, new immediate(offset), null));
                 else {
@@ -210,6 +212,7 @@ public class ASMBuilder implements IRvisitor {
     public void visit(IR.inst.ret it) {
         if (it.ty instanceof voidType) nowBlock.addInst(new mv(a0, zero));
         else nowBlock.addInst(new mv(a0, getReg(it.value)));
+        nowBlock.addInst(new j("."+nowFunction.name+"_"+"RETURN"));
     }
 
     @Override
@@ -221,8 +224,8 @@ public class ASMBuilder implements IRvisitor {
             nowBlock.addInst(new sw(EX, getReg(it.value), new immediate(0)));
         } else {
             ASMregister rs1 = getReg(it.pointer), rs2 = getReg(it.value);
-            if (nowFunction.offMap.containsKey(rs1)) {
-                int offset = -nowFunction.offMap.get(rs1);
+            if (nowFunction.offMap.containsKey(rs1.name)) {
+                int offset = -nowFunction.offMap.get(rs1.name);
                 if (-2048 <= offset && offset <= 2047)
                     nowBlock.addInst(new sw(s0, rs2, new immediate(offset)));
                 else {
@@ -261,13 +264,13 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(bitcast it) {
-        getReg(it.result);
+        regMap.put(it.result.name,getReg(it.value));
     }
 
     @Override
     public void visit(getelementptr it) {
         if (it.value instanceof globalVariable)
-            regMap.put(it.result,getReg(it.value));
+            regMap.put(it.result.name,getReg(it.value));
         else {
             ASMregister rd = getReg(it.result);
 

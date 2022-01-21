@@ -30,9 +30,9 @@ public class ASMRegisterAllocator {
     }
 
     public physicalRegister allocate(virtualRegister vReg, physicalRegister pReg, boolean op) {
-        if (!nowFunction.offMap.containsKey(vReg)) nowFunction.alloca(vReg);
+        if (!nowFunction.offMap.containsKey(vReg.name)) nowFunction.alloca(vReg);
 
-        int off = -nowFunction.offMap.get(vReg);
+        int off = -nowFunction.offMap.get(vReg.name);
         if (-2048 <= off && off <= 2047) {
             if (op) {
                 it.previous();

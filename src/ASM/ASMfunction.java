@@ -9,7 +9,7 @@ public class ASMfunction {
     public String name;
     public int offset;
     public ArrayList<ASMblock> blockList;
-    public HashMap<virtualRegister, Integer> offMap;
+    public HashMap<String, Integer> offMap;
 
     public ASMfunction(String _name) {
         name = _name;
@@ -20,7 +20,7 @@ public class ASMfunction {
 
     public void alloca(virtualRegister reg) {
         offset += reg.size;
-        offMap.put(reg, offset);
+        offMap.put(reg.name, offset);
     }
 
     public void accept(ASMvisitor visitor) {
