@@ -77,6 +77,7 @@ public class ASMBuilder implements IRvisitor {
         it.funcDefine.accept(this);
         nowBlock.addInst(new j("." + it.funcDefine.name + "_L0"));
         nowFunction.blockList.add(nowBlock);
+        it.AllocaBlock.AllocaList.forEach(x -> x.accept(this));
         it.BlockList.forEach(x -> x.accept(this));
         Module.funcList.add(nowFunction);
     }
