@@ -255,6 +255,7 @@ public class GraphColoring {
                 nowd = degree.get(x);
                 nowReg = x;
             }
+            if (nowReg == null) nowReg = x;
         }
         spillWorklist.remove(nowReg);
         simplifyWorklist.add(nowReg);
@@ -463,6 +464,7 @@ public class GraphColoring {
     public void visitModule() {
         for (ASMfunction x : Module.funcList) {
             nowFunction = x;
+            spilled = new HashSet<>();
 
             visitFunction();
 
