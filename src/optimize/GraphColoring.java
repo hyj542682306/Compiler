@@ -13,9 +13,9 @@ import org.antlr.v4.runtime.misc.Pair;
 import java.util.*;
 
 public class GraphColoring {
-    public ASMmodule module;
+    public ASMmodule Module;
     public ASMfunction nowFunction;
-    public physicalRegister zero, ra, s0;
+    public physicalRegister zero, s0;
     public virtualRegister EX;
 
     private final int K = 27;
@@ -51,10 +51,9 @@ public class GraphColoring {
     public HashSet<ASMregister> spilled = new HashSet<>();
 
     public GraphColoring(ASMmodule _module) {
-        module = _module;
-        zero = module.phyRegList.get(0);
-        ra = module.phyRegList.get(1);
-        s0 = module.phyRegList.get(8);
+        Module = _module;
+        zero = Module.phyRegList.get(0);
+        s0 = Module.phyRegList.get(8);
     }
 
     public void LivenessAnalysis() {
@@ -129,7 +128,7 @@ public class GraphColoring {
                 initialed.addAll(y.use);
             }
         for (int i = 0; i < 32; ++i) {
-            physicalRegister x = module.phyRegList.get(i);
+            physicalRegister x = Module.phyRegList.get(i);
             precolored.add(x);
             adjList.put(x, new HashSet<>());
             degree.put(x, Integer.MAX_VALUE);
@@ -173,7 +172,7 @@ public class GraphColoring {
                     if (spilledNodes.contains(z)) {
                         EX = new virtualRegister("_EX_def", 4);
                         spilled.add(EX);
-                        if (!nowFunction.offMap.containsKey(z))
+                        if (!nowFunction.offMap.containsKey(z.name))
                             nowFunction.alloca((virtualRegister) z);
                         int off = -nowFunction.offMap.get(z.name);
                         if (-2048 <= off && off <= 2047) {
@@ -198,7 +197,7 @@ public class GraphColoring {
                     if (spilledNodes.contains(z)) {
                         EX = new virtualRegister("_EX_use", 4);
                         spilled.add(EX);
-                        if (!nowFunction.offMap.containsKey(z))
+                        if (!nowFunction.offMap.containsKey(z.name))
                             nowFunction.alloca((virtualRegister) z);
                         int off = -nowFunction.offMap.get(z.name);
                         it.previous();
@@ -230,18 +229,18 @@ public class GraphColoring {
     public void AssignColors() {
         while (!selectStack.isEmpty()) {
             ASMregister n = selectStack.pop();
-            ArrayList<physicalRegister> nowCol = new ArrayList<>(module.icolors);
+            ArrayList<physicalRegister> nowCol = new ArrayList<>(Module.icolors);
             for (ASMregister x : adjList.get(n)) {
                 HashSet<ASMregister> tmp = new HashSet<>(coloredNodes);
                 tmp.addAll(precolored);
                 if (tmp.contains(GetAlias(x)))
-                    nowCol.remove(module.phyRegList.get(color.get(GetAlias(x))));
+                    nowCol.remove(Module.phyRegList.get(color.get(GetAlias(x))));
             }
             if (nowCol.isEmpty()) {
                 spilledNodes.add(n);
             } else {
                 coloredNodes.add(n);
-                color.replace(n, module.phyRegid.get(nowCol.get(0)));
+                color.replace(n, Module.phyRegid.get(nowCol.get(0)));
             }
         }
         for (ASMregister x : coalescedNodes)
@@ -462,7 +461,7 @@ public class GraphColoring {
     }
 
     public void visitModule() {
-        for (ASMfunction x : module.funcList) {
+        for (ASMfunction x : Module.funcList) {
             nowFunction = x;
             visitFunction();
 
@@ -470,11 +469,11 @@ public class GraphColoring {
                 LinkedList<Inst> newList = new LinkedList<>();
                 for (Inst z : y.instList) {
                     if (z.rs1 instanceof virtualRegister)
-                        z.rs1 = module.phyRegList.get(color.get(z.rs1));
+                        z.rs1 = Module.phyRegList.get(color.get(z.rs1));
                     if (z.rs2 instanceof virtualRegister)
-                        z.rs2 = module.phyRegList.get(color.get(z.rs2));
+                        z.rs2 = Module.phyRegList.get(color.get(z.rs2));
                     if (z.rd instanceof virtualRegister)
-                        z.rd = module.phyRegList.get(color.get(z.rd));
+                        z.rd = Module.phyRegList.get(color.get(z.rd));
 
                     if (z instanceof mv && z.rd == z.rs1) continue;
                     newList.add(z);
