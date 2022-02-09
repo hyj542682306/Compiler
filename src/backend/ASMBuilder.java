@@ -145,7 +145,7 @@ public class ASMBuilder implements IRvisitor {
             ++extraNum;
             virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
             calleeList.add(EX);
-            nowBlock.addInst(new mv(x, EX));
+            nowBlock.addInst(new mv(EX, x));
         }
 
         //deal with the paraList
@@ -229,7 +229,7 @@ public class ASMBuilder implements IRvisitor {
         for (int i = 0; i < Module.callee.size(); ++i) {
             physicalRegister x = Module.callee.get(i);
             virtualRegister EX = calleeList.get(i);
-            nowBlock.addInst(new mv(EX, x));
+            nowBlock.addInst(new mv(x, EX));
         }
 
         if (it.ty instanceof voidType) nowBlock.addInst(new mv(a0, zero));

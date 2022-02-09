@@ -268,7 +268,7 @@ public class GraphColoring {
         FreezeMoves(u);
     }
 
-    private void FreezeMoves(ASMregister u) {
+    public void FreezeMoves(ASMregister u) {
         for (mv m : NodeMoves(u)) {
             ASMregister x = m.rd;
             ASMregister y = m.rs1;
@@ -318,7 +318,7 @@ public class GraphColoring {
         }
     }
 
-    private void Combine(ASMregister u, ASMregister v) {
+    public void Combine(ASMregister u, ASMregister v) {
         if (freezeWorklist.contains(v)) freezeWorklist.remove(v);
         else spillWorklist.remove(v);
         coalescedNodes.add(v);
@@ -337,7 +337,7 @@ public class GraphColoring {
         }
     }
 
-    private boolean Conservative(HashSet<ASMregister> tmp) {
+    public boolean Conservative(HashSet<ASMregister> tmp) {
         int res = 0;
         for (ASMregister x : tmp)
             if (degree.get(x) >= K) res++;
@@ -421,7 +421,7 @@ public class GraphColoring {
         return res;
     }
 
-    private void Build() {
+    public void Build() {
         for (ASMblock x : nowFunction.blockList) {
             HashSet<ASMregister> live = blockliveout.get(x);
             for (int i = x.instList.size() - 1; i >= 0; --i) {
@@ -463,6 +463,7 @@ public class GraphColoring {
     public void visitModule() {
         for (ASMfunction x : Module.funcList) {
             nowFunction = x;
+
             visitFunction();
 
             for (ASMblock y : nowFunction.blockList) {
