@@ -2,7 +2,7 @@
 
 ### Attention:
 
-For ASM, the malloc `singleSize` of IR is changed to `4`n. This will cause IR errors. If you want IR files, please modify it back.
+For ASM, the malloc `singleSize` of IR is changed to `4`. This will cause IR errors. If you want IR files, please modify it back.
 
 ```
 intType: 4

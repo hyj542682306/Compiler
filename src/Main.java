@@ -3,6 +3,7 @@ import AST.*;
 import IR.module;
 import backend.*;
 import frontend.*;
+import optimize.GraphColoring;
 import util.Mx_liteErrorListener;
 import util.error.semanticError;
 import util.position;
@@ -64,7 +65,8 @@ public class Main {
             ASMmodule ASM = new ASMmodule();
             new ASMBuilder(ASM).visit(Module);
 
-            new ASMRegisterAllocator(ASM).RegisterAllocate();
+//            new ASMRegisterAllocator(ASM).RegisterAllocate();
+            new GraphColoring(ASM).visitModule();
 
             ASMPrinter result = new ASMPrinter("output.s");
             result.visit(ASM);

@@ -94,7 +94,7 @@ public class ASMPrinter implements ASMvisitor {
         file_print.println(tab + ".type" + tab + it.name + ",@function");
         file_print.println(it.name + ":");
 
-        int off = it.offset;
+        int off = it.offset + it.calloff;
 
         ASMblock firstBlock = it.blockList.get(0);
         ASMblock lastBlock = it.blockList.get(it.blockList.size() - 1);

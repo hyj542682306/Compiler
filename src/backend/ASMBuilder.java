@@ -4,6 +4,7 @@ import ASM.ASMblock;
 import ASM.ASMfunction;
 import ASM.ASMmodule;
 import ASM.inst.*;
+import ASM.inst.Inst;
 import ASM.inst.call;
 import ASM.operand.*;
 import IR.IRvisitor;
@@ -15,6 +16,7 @@ import IR.operand.*;
 import IR.type.classType;
 import IR.type.voidType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ASMBuilder implements IRvisitor {
@@ -23,6 +25,7 @@ public class ASMBuilder implements IRvisitor {
     public ASMblock nowBlock;
     public physicalRegister zero, ra, sp, s0, a0;
     public HashMap<String, ASMregister> regMap;
+    public ArrayList<virtualRegister> calleeList;
     int extraNum = -1;
 
     public ASMBuilder(ASMmodule _Module) {
@@ -33,6 +36,7 @@ public class ASMBuilder implements IRvisitor {
         s0 = _Module.phyRegList.get(8);
         a0 = _Module.phyRegList.get(10);
         regMap = new HashMap<>();
+        calleeList = new ArrayList<>();
     }
 
     //virtual register
@@ -134,6 +138,16 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(define it) {
+        //deal with the callee
+        calleeList.clear();
+        for (int i = 0; i < Module.callee.size(); ++i) {
+            physicalRegister x = Module.callee.get(i);
+            ++extraNum;
+            virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
+            calleeList.add(EX);
+            nowBlock.addInst(new mv(x, EX));
+        }
+
         //deal with the paraList
         for (int i = 0; i < Integer.min(it.RegList.size(), 8); ++i) {
             ASMregister tmpReg = getReg(it.RegList.get(i));
@@ -211,6 +225,13 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(IR.inst.ret it) {
+        //deal with the callee
+        for (int i = 0; i < Module.callee.size(); ++i) {
+            physicalRegister x = Module.callee.get(i);
+            virtualRegister EX = calleeList.get(i);
+            nowBlock.addInst(new mv(EX, x));
+        }
+
         if (it.ty instanceof voidType) nowBlock.addInst(new mv(a0, zero));
         else nowBlock.addInst(new mv(a0, getReg(it.value)));
         nowBlock.addInst(new j("." + nowFunction.name + "_" + "RETURN"));
@@ -243,6 +264,7 @@ public class ASMBuilder implements IRvisitor {
 
     @Override
     public void visit(IR.inst.call it) {
+        int spilloff=0;
         //deal with the paraList
         for (int i = 0; i < Integer.min(it.paraList.size(), 8); ++i) {
             ASMregister tmpReg = getReg(it.paraList.get(i));
@@ -250,11 +272,15 @@ public class ASMBuilder implements IRvisitor {
         }
         for (int i = 8; i < it.paraList.size(); ++i) {
             ASMregister tmpReg = getReg(it.paraList.get(i));
+            spilloff += 4;
             nowBlock.addInst(new sw(sp, tmpReg, new immediate((i - 8) * 4)));
         }
 
+        nowFunction.calloff = Math.max(nowFunction.calloff, spilloff);
         //call
-        nowBlock.addInst(new call(it.funcId));
+        Inst res = new call(it.funcId);
+        res.def.addAll(Module.caller);
+        nowBlock.addInst(res);
 
         //deal with the return values
         if (!(it.ty instanceof voidType)) {
