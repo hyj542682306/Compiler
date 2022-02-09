@@ -175,7 +175,7 @@ public class GraphColoring {
                         spilled.add(EX);
                         if (!nowFunction.offMap.containsKey(z))
                             nowFunction.alloca((virtualRegister) z);
-                        int off = -nowFunction.offMap.get(z);
+                        int off = -nowFunction.offMap.get(z.name);
                         if (-2048 <= off && off <= 2047) {
                             it.add(new sw(s0, EX, new immediate(off)));
                         } else {
@@ -200,7 +200,7 @@ public class GraphColoring {
                         spilled.add(EX);
                         if (!nowFunction.offMap.containsKey(z))
                             nowFunction.alloca((virtualRegister) z);
-                        int off = -nowFunction.offMap.get(z);
+                        int off = -nowFunction.offMap.get(z.name);
                         it.previous();
                         if (-2048 <= off && off <= 2047) {
                             it.add(new lw(EX, s0, new immediate(off), null));
