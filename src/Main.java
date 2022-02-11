@@ -24,7 +24,7 @@ public class Main {
         String name = "test.mx";
         InputStream input = System.in;
         boolean tag = false;
-        if (args.length > 0){
+        if (args.length > 0) {
             for (String arg : args) {
                 switch (arg) {
                     case "-semantic" -> tag = false;
@@ -55,7 +55,7 @@ public class Main {
             globalScope.varMap.clear();
             new SemanticChecker(globalScope).visit(ASTRoot);
 
-            if (!tag)return ;
+            if (!tag) return;
 
             //Codegen - IR, ASM
             module Module = new module();
