@@ -253,10 +253,7 @@ public class ASMBuilder implements IRvisitor {
             nowBlock.addInst(new sw(EX, getReg(it.value), new immediate(0)));
         } else {
             if (it.pointer instanceof temporary) {
-                ++extraNum;
-                virtualRegister EX = new virtualRegister("_EX_" + extraNum, 4);
-                nowBlock.addInst(new mv(EX, getReg(it.value)));
-                regMap.put(nowFunction.name + "_" + ((temporary) it.pointer).name, EX);
+                nowBlock.addInst(new mv(getReg(it.pointer),getReg(it.value)));
             } else {
                 ASMregister rs1 = getReg(it.pointer), rs2 = getReg(it.value);
                 if (nowFunction.offMap.containsKey(rs1.name)) {
