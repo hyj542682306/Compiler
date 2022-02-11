@@ -4,6 +4,7 @@ import IR.module;
 import backend.*;
 import frontend.*;
 import optimize.GraphColoring;
+import optimize.MemToReg;
 import util.Mx_liteErrorListener;
 import util.error.semanticError;
 import util.position;
@@ -61,6 +62,10 @@ public class Main {
             new IRBuilder(globalScope, Module).visit(ASTRoot);
             IRPrinter myIR = new IRPrinter("myllvm.ll");
             myIR.visit(Module);
+
+            new MemToReg(Module).visit(Module);
+            IRPrinter newIR = new IRPrinter("myllvm2.ll");
+            newIR.visit(Module);
 
             ASMmodule ASM = new ASMmodule();
             new ASMBuilder(ASM).visit(Module);
