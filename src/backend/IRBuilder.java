@@ -1450,6 +1450,9 @@ public class IRBuilder implements ASTvisitor {
                 ++num;
                 register newReg = new register(nowIRType, Integer.toString(num));
                 nowBlock.addInst(new binary(nowBlock, newReg, "xor", operand1.type, operand1, operand2));
+
+                //binaryExpr's operand
+                it.operand = newReg;
             }
             case "|" -> {
                 //binary
